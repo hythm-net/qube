@@ -21,7 +21,7 @@ spec:
           app:
             image:
               repository: ghcr.io/hythm7/lyl
-              tag: 2026.1012.41@sha256:c27218a1d490ee0db147c097fb7ccad417051846c05c5b1df028564090a38cef
+              tag: 2026.1012.42@sha256:512002f80648773aa5285ee9c13c6bae98296f6c5555428c76afeb5cb393ce60
             args:
               - app
               - --http
