@@ -19,6 +19,12 @@ spec:
         - ports:
             - port: "8000"
               protocol: TCP
+    # envoy-direct's answers to this app's own calls to id.hythm.net (sign-in token exchange);
+    # they come back through the gateway's address and fall to the default deny otherwise
+    - fromEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: networking
+            gateway.envoyproxy.io/owning-gateway-name: envoy-direct
     # the kubelet's probes
     - fromEntities:
         - host
