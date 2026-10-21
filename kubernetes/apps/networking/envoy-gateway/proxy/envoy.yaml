@@ -88,7 +88,8 @@ spec:
 # yaml-language-server: $schema=https://k8s-schemas.home-operations.com/gateway.networking.k8s.io/gateway_v1.json
 # Straight from the internet, not through the Cloudflare tunnel: OPNsense forwards WAN 443 to
 # this address only. For apps whose uploads outgrow Cloudflare's 100 MB request cap (Immich),
-# and for what must not pass through Cloudflare at all (Paperless share links).
+# for what must not pass through Cloudflare at all (Paperless share links, chat), and for video
+# streaming, which Cloudflare's terms do not want through the tunnel (Jellyfin).
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
@@ -118,6 +119,7 @@ spec:
                 values:
                   - ai
                   - immich
+                  - media
                   - paperless
       tls:
         certificateRefs:

@@ -89,6 +89,8 @@ spec:
     route:
       app:
         annotations:
+          # video streams straight from the WAN, not through the Cloudflare tunnel; DNS-only
+          external-dns.kubernetes.io/cloudflare-proxied: "false"
           gatus.home-operations.com/endpoint: |-
             name: play
             group: play
@@ -96,7 +98,7 @@ spec:
         hostnames:
           - "play.hythm.net"
         parentRefs:
-          - name: envoy-external
+          - name: envoy-direct
             namespace: networking
         rules:
           - name: app
