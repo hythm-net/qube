@@ -50,15 +50,12 @@ spec:
                   name: paperless-secret
             probes:
               liveness: &probes
+                # a port check: /api/ redirects to the schema view, which answers 406 to probes
                 enabled: true
                 custom: true
                 spec:
-                  httpGet:
-                    path: /api/
+                  tcpSocket:
                     port: &port 8000
-                    httpHeaders:
-                      - name: Accept
-                        value: application/json
                   initialDelaySeconds: 0
                   periodSeconds: 10
                   timeoutSeconds: 5
