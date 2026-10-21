@@ -30,9 +30,16 @@ spec:
               ENABLE_OLLAMA_API: "false"
               OPENAI_API_BASE_URL: http://llama:8080/v1
               OPENAI_API_KEY: local
-              # family accounts are made by the admin; nobody signs up
+              # family accounts come from Pocket ID (family group only); no local sign-up. The
+              # admin's local login stays as the way in when Pocket ID is down.
               ENABLE_SIGNUP: "false"
               DEFAULT_USER_ROLE: user
+              ENABLE_OAUTH_SIGNUP: "true"
+              OAUTH_MERGE_ACCOUNTS_BY_EMAIL: "true"
+              OAUTH_PROVIDER_NAME: Pocket ID
+              OAUTH_CLIENT_ID: open-webui
+              OPENID_PROVIDER_URL: https://id.hythm.net/.well-known/openid-configuration
+              OAUTH_SCOPES: openid email profile
               # documents dropped into a chat are searched with a multilingual model (Arabic too)
               RAG_EMBEDDING_MODEL: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
               ANONYMIZED_TELEMETRY: "false"

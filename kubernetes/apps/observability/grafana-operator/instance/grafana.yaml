@@ -17,6 +17,23 @@ spec:
       disable_login_form: "false"
     auth.anonymous:
       enabled: "true"
+    auth.generic_oauth:
+      enabled: "true"
+      name: Pocket ID
+      client_id: grafana
+      # client_secret: GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET from grafana-secret
+      scopes: openid email profile groups
+      auth_url: https://id.hythm.net/authorize
+      token_url: https://id.hythm.net/api/oidc/token
+      api_url: https://id.hythm.net/api/oidc/userinfo
+      use_pkce: "true"
+      allow_sign_up: "true"
+      login_attribute_path: preferred_username
+      email_attribute_path: email
+      name_attribute_path: name
+      # Pocket ID only lets the admins group in; they administer Grafana
+      role_attribute_path: contains(groups[*], 'admins') && 'Admin' || 'Viewer'
+      allow_assign_grafana_admin: "true"
     log:
       mode: console
     metrics:
@@ -29,6 +46,7 @@ spec:
       angular_support_enabled: "true"
     server:
       enable_gzip: "true"
+      root_url: https://grafana.hythm.net
   deployment:
     spec:
       strategy:
@@ -50,6 +68,11 @@ spec:
                     secretKeyRef:
                       name: grafana-secret
                       key: GF_SECURITY_ADMIN_PASSWORD
+                - name: GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: grafana-secret
+                      key: GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET
               securityContext:
                 allowPrivilegeEscalation: false
                 readOnlyRootFilesystem: true

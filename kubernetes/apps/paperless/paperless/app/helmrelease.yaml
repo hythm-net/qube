@@ -45,6 +45,11 @@ spec:
               # the image starts as root for that install, then runs paperless as 1000 (chthon's owner)
               USERMAP_UID: "1000"
               USERMAP_GID: "1000"
+              # sign-in with Pocket ID (provider in paperless-secret); the local login stays as
+              # the way in when Pocket ID is down. New family members get an account on first sign-in.
+              PAPERLESS_APPS: allauth.socialaccount.providers.openid_connect
+              PAPERLESS_SOCIAL_AUTO_SIGNUP: "true"
+              PAPERLESS_SOCIALACCOUNT_ALLOW_SIGNUPS: "true"
               # suggestions from the local GLM (ai/llama); nothing leaves the house. Thinking off:
               # tagging wants an answer, not a monologue
               PAPERLESS_AI_ENABLED: "true"
