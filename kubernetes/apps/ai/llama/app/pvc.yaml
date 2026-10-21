@@ -1,0 +1,13 @@
+---
+# model weights only: downloaded again if lost, so no volsync
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: llama-models
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Gi
+  storageClassName: openebs-hostpath

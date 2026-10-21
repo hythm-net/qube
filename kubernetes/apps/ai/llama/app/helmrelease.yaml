@@ -1,0 +1,143 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: llama
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+    namespace: flux-system
+  interval: 1h
+  # the first start downloads 67 GB before the server can come up
+  timeout: 1h
+  values:
+    controllers:
+      llama:
+        # one copy of the model in GPU memory at a time
+        strategy: Recreate
+        initContainers:
+          download:
+            # GLM-4.5-Air, unsloth's UD-Q4_K_XL (67 GB in two parts), pinned to a revision and
+            # checked against its sha256; resumes an interrupted download, skips a finished one
+            image:
+              repository: mirror.gcr.io/curlimages/curl
+              tag: 8.17.0@sha256:935d9100e9ba842cdb060de42472c7ca90cfe9a7c96e4dacb55e79e560b3ff40
+            command:
+              - sh
+              - -c
+              - |
+                set -eu
+                cd /models
+                base=https://huggingface.co/unsloth/GLM-4.5-Air-GGUF/resolve/506d64aa8c5cfe9dbbf00bc7a15739438f83204d/UD-Q4_K_XL
+                while read -r sum file; do
+                  [ -f "$file" ] && continue
+                  curl -fL --retry 20 --retry-all-errors -C - -o "$file.part" "$base/$file"
+                  echo "$sum  $file.part" | sha256sum -c -
+                  mv "$file.part" "$file"
+                done <<'FILES'
+                1acd6d4acdb4f463c9a61696cb7e830e1a34134e610b573e87a4397adcd90bd7 GLM-4.5-Air-UD-Q4_K_XL-00001-of-00002.gguf
+                8e220a3cdf4e19763cc7a5fd0a6215f1da1b3fda1306e64e88456d045c2007f8 GLM-4.5-Air-UD-Q4_K_XL-00002-of-00002.gguf
+                FILES
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities: { drop: ["ALL"] }
+        containers:
+          app:
+            image:
+              repository: ghcr.io/ggml-org/llama.cpp
+              tag: server-vulkan-b11749@sha256:5a23ea3de52d4004f21f929f7365b97df03db12b946117eeed214337379994a8
+            args:
+              - --model
+              - /models/GLM-4.5-Air-UD-Q4_K_XL-00001-of-00002.gguf
+              - --alias
+              - glm-4.5-air
+              - --host
+              - 0.0.0.0
+              - --port
+              - "8080"
+              # every layer on the GPU; two conversations at once, 32k tokens each
+              - --n-gpu-layers
+              - "999"
+              - --ctx-size
+              - "65536"
+              - --parallel
+              - "2"
+              # a q8 KV cache halves its memory (needs flash attention)
+              - --flash-attn
+              - "on"
+              - --cache-type-k
+              - q8_0
+              - --cache-type-v
+              - q8_0
+              # GLM's own chat template: tool calls and the thinking switch
+              - --jinja
+              # read straight into GPU memory; mmap would hold a second copy in page cache
+              - --no-mmap
+              - --metrics
+            probes:
+              liveness: &probes
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 8080
+                  initialDelaySeconds: 0
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 6
+              readiness: *probes
+              startup:
+                # loading 67 GB into GPU memory
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /health
+                    port: 8080
+                  periodSeconds: 10
+                  failureThreshold: 90
+            resources:
+              claims:
+                - name: gpu
+              requests:
+                cpu: 500m
+              limits:
+                memory: 32Gi
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities: { drop: ["ALL"] }
+        pod:
+          resourceClaims:
+            - name: gpu
+              resourceClaimTemplateName: llama
+    defaultPodOptions:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+    persistence:
+      models:
+        existingClaim: llama-models
+        globalMounts:
+          - path: /models
+      tmpfs:
+        type: emptyDir
+        globalMounts:
+          - path: /tmp
+            subPath: tmp
+    service:
+      app:
+        ports:
+          http:
+            port: 8080
+    serviceMonitor:
+      app:
+        endpoints:
+          - port: http
