@@ -1,0 +1,36 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/cilium.io/ciliumnetworkpolicy_v2.json
+# Open WebUI faces the internet through envoy-direct; nothing else in the cluster reaches it.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: open-webui
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: open-webui
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: networking
+            gateway.envoyproxy.io/owning-gateway-name: envoy-direct
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
+    # the kubelet's probes
+    - fromEntities:
+        - host
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
+    # its own namespace (the model's answers) and CoreDNS: replies come back through their
+    # Services and fall to the default deny otherwise (see immich-server's policy)
+    - fromEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: ai
+    - fromEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: kube-system
+            k8s-app: kube-dns

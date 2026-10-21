@@ -116,6 +116,7 @@ spec:
               - key: kubernetes.io/metadata.name
                 operator: In
                 values:
+                  - ai
                   - immich
                   - paperless
       tls:

@@ -91,11 +91,13 @@ spec:
             subPath: tmp
     route:
       app:
-        # the home network and WireGuard
+        # for the family away from home too: straight from the WAN, behind CrowdSec, DNS-only
+        annotations:
+          external-dns.kubernetes.io/cloudflare-proxied: "false"
         hostnames:
           - chat.hythm.net
         parentRefs:
-          - name: envoy-internal
+          - name: envoy-direct
             namespace: networking
         rules:
           - backendRefs:
