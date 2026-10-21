@@ -6,3 +6,4 @@ resources:
   - ./ciliumnetworkpolicy.yaml
   - ./helmrelease.yaml
   - ./pvc.yaml
+  - ./rbac.yaml
