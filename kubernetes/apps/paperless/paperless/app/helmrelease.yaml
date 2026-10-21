@@ -1,0 +1,217 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: paperless
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+    namespace: flux-system
+  interval: 1h
+  values:
+    controllers:
+      paperless:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          app:
+            image: &image
+              repository: ghcr.io/paperless-ngx/paperless-ngx
+              tag: 3.3.3@sha256:dba0242c1df1843643df4eb50ce5639f3a7900f414879088fd5bed8eaf2d456d
+            env: &env
+              TZ: America/New_York
+              PAPERLESS_TIME_ZONE: America/New_York
+              PAPERLESS_URL: https://documents.hythm.net
+              PAPERLESS_PORT: "8000"
+              PAPERLESS_WEBSERVER_WORKERS: "2"
+              PAPERLESS_TASK_WORKERS: "2"
+              PAPERLESS_DBENGINE: postgresql
+              PAPERLESS_DBHOST: paperless-postgres-rw
+              PAPERLESS_DBNAME: paperless
+              PAPERLESS_DBUSER: paperless
+              PAPERLESS_REDIS: redis://paperless-valkey:6379
+              # index and classifier on the local volume; the documents themselves on chthon
+              PAPERLESS_DATA_DIR: /data/local/data
+              PAPERLESS_MEDIA_ROOT: /data/nas/media
+              PAPERLESS_CONSUMPTION_DIR: /data/nas/consume
+              PAPERLESS_CONSUMER_POLLING: "60"
+              PAPERLESS_CONSUMER_RECURSIVE: "true"
+              PAPERLESS_CONSUMER_SUBDIRS_AS_TAGS: "true"
+              # Arabic is not in the image: installed from Debian at each start (needs root)
+              PAPERLESS_OCR_LANGUAGES: ara
+              PAPERLESS_OCR_LANGUAGE: eng+ara
+              # the image starts as root for that install, then runs paperless as 1000 (chthon's owner)
+              USERMAP_UID: "1000"
+              USERMAP_GID: "1000"
+            envFrom: &envFrom
+              - secretRef:
+                  name: paperless-secret
+            probes:
+              liveness: &probes
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/
+                    port: &port 8000
+                    httpHeaders:
+                      - name: Accept
+                        value: application/json
+                  initialDelaySeconds: 0
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              readiness: *probes
+              startup:
+                # first start: language install and every migration
+                enabled: true
+                custom: true
+                spec:
+                  tcpSocket:
+                    port: *port
+                  periodSeconds: 10
+                  failureThreshold: 60
+            resources:
+              requests:
+                cpu: 100m
+                memory: 1Gi
+              limits:
+                memory: 6Gi
+      exporter:
+        # every document with its metadata into @documents/export, readable without paperless
+        # or its database; chthon's snapshots keep the history
+        type: cronjob
+        cronjob:
+          schedule: "30 3 * * *"
+          concurrencyPolicy: Forbid
+          successfulJobsHistory: 1
+          failedJobsHistory: 2
+        pod:
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+        containers:
+          app:
+            image: *image
+            env: *env
+            envFrom: *envFrom
+            workingDir: /usr/src/paperless/src
+            command: ["python3", "manage.py", "document_exporter", "/data/nas/export", "--delete"]
+            resources:
+              requests:
+                cpu: 50m
+              limits:
+                memory: 2Gi
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities: { drop: ["ALL"] }
+      valkey:
+        containers:
+          app:
+            image:
+              repository: mirror.gcr.io/valkey/valkey
+              tag: 9.1.2@sha256:418652cfb58ef879d4978c33553735d7147016032d5aefaa14c828e611eb9dfd
+            # the task queue: what is lost on a restart, paperless queues again
+            args: ["--save", "", "--appendonly", "no"]
+            probes:
+              liveness: &valkeyProbes
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command: ["valkey-cli", "ping"]
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              readiness: *valkeyProbes
+            resources:
+              requests:
+                cpu: 10m
+              limits:
+                memory: 256Mi
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities: { drop: ["ALL"] }
+        pod:
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+    persistence:
+      data:
+        existingClaim: "{{ .Release.Name }}"
+        advancedMounts:
+          paperless:
+            app:
+              - path: /data/local
+          exporter:
+            app:
+              - path: /data/local
+      nas:
+        type: nfs
+        path: /data/@documents
+        server: chthon.internal
+        advancedMounts:
+          paperless:
+            app:
+              - path: /data/nas
+          exporter:
+            app:
+              - path: /data/nas
+      tmpfs:
+        type: emptyDir
+        advancedMounts:
+          exporter:
+            app:
+              - path: /tmp
+                subPath: tmp
+          valkey:
+            app:
+              - path: /data
+                subPath: valkey
+    route:
+      share:
+        # share links, for anyone with one: the file itself, no app and no login page
+        annotations:
+          external-dns.kubernetes.io/cloudflare-proxied: "false"
+        hostnames:
+          - &host documents.hythm.net
+        parentRefs:
+          - &direct
+            name: envoy-direct
+            namespace: networking
+        rules:
+          - matches:
+              - path:
+                  type: PathPrefix
+                  value: /share/
+            backendRefs:
+              - identifier: paperless
+                port: *port
+      app:
+        # everything else: private addresses only (securitypolicy.yaml)
+        annotations:
+          external-dns.kubernetes.io/cloudflare-proxied: "false"
+        hostnames:
+          - *host
+        parentRefs:
+          - *direct
+        rules:
+          - backendRefs:
+              - identifier: paperless
+                port: *port
+    service:
+      paperless:
+        controller: paperless
+        ports:
+          http:
+            port: *port
+      valkey:
+        controller: valkey
+        ports:
+          valkey:
+            port: 6379

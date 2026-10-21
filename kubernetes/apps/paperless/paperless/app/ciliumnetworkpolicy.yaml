@@ -1,0 +1,37 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/cilium.io/ciliumnetworkpolicy_v2.json
+# Only envoy-direct reaches the app; who may use which path is the SecurityPolicy's job there.
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: paperless
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: paperless
+      app.kubernetes.io/controller: paperless
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: networking
+            gateway.envoyproxy.io/owning-gateway-name: envoy-direct
+      toPorts:
+        - ports:
+            - port: "8000"
+              protocol: TCP
+    # the kubelet's probes
+    - fromEntities:
+        - host
+      toPorts:
+        - ports:
+            - port: "8000"
+              protocol: TCP
+    # its own namespace (Postgres, Valkey) and CoreDNS: their answers come back through their
+    # Services and fall to the default deny otherwise (see immich-server's policy)
+    - fromEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: paperless
+    - fromEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: kube-system
+            k8s-app: kube-dns
