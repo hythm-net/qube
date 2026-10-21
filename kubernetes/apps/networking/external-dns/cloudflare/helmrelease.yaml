@@ -25,7 +25,8 @@ spec:
               - --cloudflare-proxied
               - --domain-filter=hythm.net
               - --events
-              - --gateway-name=envoy-external
+              # envoy-external (tunnel, proxied) and envoy-direct (WAN, DNS-only); never envoy-internal
+              - --gateway-label-filter=external-dns.hythm.net/cloudflare=true
               - --interval=1m
               - --log-format=text
               - --log-level=info

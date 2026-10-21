@@ -1,0 +1,48 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: cloudflare-ddns
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+    namespace: flux-system
+  interval: 1h
+  values:
+    controllers:
+      cloudflare-ddns:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          app:
+            image:
+              repository: ghcr.io/favonia/cloudflare-ddns
+              tag: 1.17.1@sha256:5e61736b982b87d84a1120b4767c4deff0f2cc55ca3ee9dcb1dc58623039b5cb
+            env:
+              TZ: America/New_York
+              # the home WAN address, DNS-only: envoy-direct's routes are CNAMEs to it.
+              # Never the apex, which carries its own A record and the mail setup.
+              DOMAINS: direct.hythm.net
+              IP6_PROVIDER: none
+              PROXIED: "false"
+              UPDATE_CRON: "@every 5m"
+              EMOJI: "false"
+            envFrom:
+              - secretRef:
+                  name: cloudflare-ddns-secret
+            resources:
+              requests:
+                cpu: 10m
+              limits:
+                memory: 64Mi
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities: { drop: ["ALL"] }
+    defaultPodOptions:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
