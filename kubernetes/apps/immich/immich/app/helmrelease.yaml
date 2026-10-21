@@ -1,0 +1,227 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: immich
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+    namespace: flux-system
+  interval: 1h
+  values:
+    controllers:
+      server:
+        annotations:
+          reloader.stakater.com/auto: "true"
+        containers:
+          app:
+            image:
+              repository: ghcr.io/immich-app/immich-server
+              tag: v3.3.4@sha256:f6475c58b07a8d89ec845aa8782731d36656c3c17d943e0a101dc6ed99a2e53f
+            env:
+              TZ: America/New_York
+              DB_URL:
+                valueFrom:
+                  secretKeyRef:
+                    name: immich-postgres-credentials
+                    key: uri
+              DB_VECTOR_EXTENSION: vectorchord
+              REDIS_HOSTNAME: immich-valkey
+              IMMICH_MACHINE_LEARNING_URL: http://immich-machine-learning:3003
+              IMMICH_TELEMETRY_INCLUDE: all
+              # the gateways' pods: their X-Forwarded-For carries the client's address
+              IMMICH_TRUSTED_PROXIES: 10.244.0.0/16
+              # the library is an NFS share; its marker files are checked there anyway
+              IMMICH_IGNORE_MOUNT_CHECK_ERRORS: "true"
+            probes:
+              liveness: &serverProbes
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/server/ping
+                    port: &port 2283
+                  initialDelaySeconds: 0
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              readiness: *serverProbes
+              startup:
+                # the first start runs every migration on an empty database
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /api/server/ping
+                    port: *port
+                  periodSeconds: 10
+                  failureThreshold: 60
+            resources:
+              # VAAPI for video transcoding, on the GPU Jellyfin already shares
+              claims:
+                - name: gpu
+              requests:
+                cpu: 100m
+              limits:
+                memory: 8Gi
+            securityContext:
+              allowPrivilegeEscalation: false
+              capabilities: { drop: ["ALL"] }
+        pod:
+          resourceClaims:
+            - name: gpu
+              resourceClaimTemplateName: immich
+      machine-learning:
+        containers:
+          app:
+            image:
+              repository: ghcr.io/immich-app/immich-machine-learning
+              tag: v3.3.4@sha256:1ab8674e7cec41009abb3812de62a16cc1917e73d486233a5471b048d26fc14d
+            env:
+              TZ: America/New_York
+              MACHINE_LEARNING_CACHE_FOLDER: /cache
+              MACHINE_LEARNING_MODEL_REVISION: v2
+              HOME: /cache
+              MPLCONFIGDIR: /tmp/matplotlib
+            probes:
+              liveness: &mlProbes
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /ping
+                    port: &mlPort 3003
+                  initialDelaySeconds: 0
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              readiness: *mlProbes
+              startup:
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /ping
+                    port: *mlPort
+                  periodSeconds: 10
+                  failureThreshold: 60
+            resources:
+              requests:
+                cpu: 100m
+              limits:
+                memory: 8Gi
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities: { drop: ["ALL"] }
+      valkey:
+        containers:
+          app:
+            image:
+              repository: mirror.gcr.io/valkey/valkey
+              tag: 9.1.2@sha256:418652cfb58ef879d4978c33553735d7147016032d5aefaa14c828e611eb9dfd
+            # a job queue only: what is lost on a restart the server queues again
+            args: ["--save", "", "--appendonly", "no"]
+            probes:
+              liveness: &valkeyProbes
+                enabled: true
+                custom: true
+                spec:
+                  exec:
+                    command: ["valkey-cli", "ping"]
+                  periodSeconds: 10
+                  timeoutSeconds: 5
+                  failureThreshold: 3
+              readiness: *valkeyProbes
+            resources:
+              requests:
+                cpu: 10m
+              limits:
+                memory: 512Mi
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities: { drop: ["ALL"] }
+    defaultPodOptions:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+    persistence:
+      library:
+        type: nfs
+        path: /data/@photos
+        server: chthon.internal
+        advancedMounts:
+          server:
+            app:
+              - path: /data
+      model-cache:
+        existingClaim: immich-model-cache
+        advancedMounts:
+          machine-learning:
+            app:
+              - path: /cache
+      tmpfs:
+        type: emptyDir
+        advancedMounts:
+          server:
+            app:
+              - path: /tmp
+                subPath: server-tmp
+              # the image's own app dir is root's; these are the two it writes into
+              - path: /usr/src/app/.reverse-geocoding-dump
+                subPath: geocoding
+              - path: /usr/src/app/.transformers_cache
+                subPath: transformers
+          machine-learning:
+            app:
+              - path: /tmp
+                subPath: tmp
+          valkey:
+            app:
+              - path: /data
+                subPath: valkey
+    route:
+      app:
+        hostnames:
+          - photos.hythm.net
+        parentRefs:
+          - name: envoy-internal
+            namespace: networking
+        rules:
+          - name: app
+            backendRefs:
+              - identifier: server
+                port: *port
+    service:
+      server:
+        controller: server
+        ports:
+          http:
+            port: *port
+          metrics-api:
+            port: 8081
+          metrics-microservices:
+            port: 8082
+      machine-learning:
+        controller: machine-learning
+        ports:
+          http:
+            port: *mlPort
+      valkey:
+        controller: valkey
+        ports:
+          valkey:
+            port: 6379
+    serviceMonitor:
+      server:
+        service:
+          identifier: server
+        endpoints:
+          - port: metrics-api
+          - port: metrics-microservices

@@ -1,0 +1,50 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/postgresql.cnpg.io/cluster_v1.json
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: immich-postgres
+spec:
+  instances: 1
+  imageName: ghcr.io/cloudnative-pg/postgresql:18.6-standard-bookworm
+  postgresql:
+    extensions:
+      # pgvector ships in the standard image; VectorChord is mounted from its own image
+      - name: vchord
+        image:
+          reference: ghcr.io/tensorchord/vchord-scratch:pg18-v1.1.1
+        dynamic_library_path:
+          - /usr/lib/postgresql/18/lib/
+        extension_control_path:
+          - /usr/share/postgresql/18/
+    shared_preload_libraries:
+      - vchord
+  # one instance on one node: a PDB for it would only block the drain of every Talos upgrade
+  enablePDB: false
+  enableSuperuserAccess: false
+  managed:
+    roles:
+      # Immich's own way: it creates and updates its extensions (and reindexes after a
+      # VectorChord bump) and takes its nightly pg_dumpall, both of which need superuser.
+      # The cluster holds nothing but Immich's database.
+      - name: immich
+        ensure: present
+        login: true
+        superuser: true
+        passwordSecret:
+          name: immich-postgres-credentials
+  storage:
+    size: 10Gi
+    storageClass: openebs-hostpath
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      memory: 2Gi
+  bootstrap:
+    initdb:
+      database: immich
+      owner: immich
+      secret:
+        name: immich-postgres-credentials

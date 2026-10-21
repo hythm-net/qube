@@ -1,0 +1,13 @@
+---
+# downloaded models only: nothing here is worth a backup, so no volsync
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: immich-model-cache
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+  storageClassName: openebs-hostpath
