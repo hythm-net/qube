@@ -36,8 +36,6 @@ metadata:
 spec:
   dependsOn:
     - name: immich-database
-    - name: k8s-gpu-dra-driver
-      namespace: kube-system
     - name: openebs
       namespace: openebs-system
   interval: 1h

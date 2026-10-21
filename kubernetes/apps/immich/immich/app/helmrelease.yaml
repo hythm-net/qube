@@ -59,9 +59,8 @@ spec:
                   periodSeconds: 10
                   failureThreshold: 60
             resources:
-              # VAAPI for video transcoding, on the GPU Jellyfin already shares
-              claims:
-                - name: gpu
+              # video transcodes on the CPU: Jellyfin's claim holds the GPU exclusively, and the
+              # driver only shares partitioned (Instinct) GPUs, not this APU
               requests:
                 cpu: 100m
               limits:
@@ -69,10 +68,6 @@ spec:
             securityContext:
               allowPrivilegeEscalation: false
               capabilities: { drop: ["ALL"] }
-        pod:
-          resourceClaims:
-            - name: gpu
-              resourceClaimTemplateName: immich
       machine-learning:
         containers:
           app:
