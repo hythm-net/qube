@@ -189,6 +189,8 @@ spec:
         # share links, for anyone with one: the file itself, no app and no login page
         annotations:
           external-dns.kubernetes.io/cloudflare-proxied: "false"
+          # no page of its own to probe: paperless-app's check covers the same backend
+          gatus.home-operations.com/enabled: "false"
         hostnames:
           - &host documents.hythm.net
         parentRefs:

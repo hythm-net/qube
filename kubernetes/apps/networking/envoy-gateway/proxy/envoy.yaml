@@ -99,6 +99,13 @@ metadata:
   annotations:
     # kept on the WAN address by cloudflare-ddns; routes here must set cloudflare-proxied "false"
     external-dns.kubernetes.io/target: direct.hythm.net
+    # probed from inside: home DNS sends these names to this gateway (OPNsense does not reflect
+    # the WAN address back in), so the checks cover gateway and app, not the port forward
+    gatus.home-operations.com/endpoint: |-
+      group: direct
+      ui:
+        hide-url:      true
+        hide-hostname: true
 spec:
   gatewayClassName: envoy
   infrastructure:
