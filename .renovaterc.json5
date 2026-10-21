@@ -9,4 +9,8 @@
     "github>hythm7/qube//.renovate/labels.json5",
     ":timezone(America/New_York)",
   ],
+  // The Main ruleset does not require up-to-date branches, and `auto` would
+  // still rebase every automerge PR each time main moves
+  rebaseWhen: "conflicted",
+  automergeStrategy: "rebase",
 }
