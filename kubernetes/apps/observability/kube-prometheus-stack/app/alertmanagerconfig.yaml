@@ -15,6 +15,16 @@ spec:
     groupWait: 1m
     groupInterval: 5m
     routes:
+      # Watchdog always fires: it is a heartbeat for Healthchecks.io, which alerts when it stops
+      # (cluster down, power cut, alerting broken). Never to the phone while all is well.
+      - receiver: heartbeat
+        matchers:
+          - name: alertname
+            matchType: =
+            value: Watchdog
+        groupWait: 0s
+        groupInterval: 1m
+        repeatInterval: 1m
       - receiver: blackhole
         matchers:
           - name: alertname
@@ -41,6 +51,12 @@ spec:
 
   receivers:
     - name: blackhole
+    - name: heartbeat
+      webhookConfigs:
+        - urlSecret:
+            name: alertmanager-secret
+            key: ALERTMANAGER_HEARTBEAT_URL
+          sendResolved: false
     - name: pushover
       pushoverConfigs:
         - html: true
