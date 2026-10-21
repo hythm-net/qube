@@ -69,6 +69,7 @@ spec:
                 - name: gpu
               requests:
                 cpu: 100m
+                memory: 2Gi
               limits:
                 memory: 8Gi
             securityContext:
@@ -115,6 +116,7 @@ spec:
             resources:
               requests:
                 cpu: 100m
+                memory: 3Gi
               limits:
                 memory: 8Gi
             securityContext:
@@ -143,6 +145,7 @@ spec:
             resources:
               requests:
                 cpu: 10m
+                memory: 64Mi
               limits:
                 memory: 512Mi
             securityContext:
