@@ -35,3 +35,8 @@ spec:
         - matchLabels:
             io.kubernetes.pod.namespace: kube-system
             k8s-app: kube-dns
+    # the local model's answers (ai/llama), back through its Service like the others
+    - fromEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: ai
+            app.kubernetes.io/name: llama

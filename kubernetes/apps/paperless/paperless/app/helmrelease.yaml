@@ -52,7 +52,8 @@ spec:
               PAPERLESS_AI_LLM_ENDPOINT: http://llama.ai.svc.cluster.local:8080/v1
               PAPERLESS_AI_LLM_MODEL: glm-4.5-air
               PAPERLESS_AI_LLM_API_KEY: local
-              PAPERLESS_AI_LLM_EXTRA_PARAMS: '{"chat_template_kwargs": {"enable_thinking": false}}'
+              # passed to the OpenAI client as keyword arguments: llama.cpp's own fields go in extra_body
+              PAPERLESS_AI_LLM_EXTRA_PARAMS: '{"extra_body": {"chat_template_kwargs": {"enable_thinking": false}}}'
               PAPERLESS_AI_LLM_CONTEXT_SIZE: "16384"
               PAPERLESS_AI_LLM_REQUEST_TIMEOUT: "300"
               # document chat (RAG) embeds on the CPU, with a model that knows Arabic
