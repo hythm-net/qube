@@ -47,6 +47,7 @@ spec:
                 - name: gpu
               requests:
                 cpu: 100m
+                memory: 2560Mi
               limits:
                 memory: 8Gi
             securityContext:
