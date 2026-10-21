@@ -27,3 +27,32 @@ spec:
               Container {{ $labels.container }} in pod {{ $labels.namespace }}/{{ $labels.pod }} has been OOMKilled {{ $value }} times in the last 10 minutes.
           labels:
             severity: critical
+
+    - name: memory.rules
+      rules:
+        # Requests come from measured peaks (#452). An app living well above its request is the
+        # first to be evicted when the node runs short (the GPU can borrow 64 GiB of RAM), so this
+        # says which app's resources.requests.memory to raise, before that happens. System
+        # namespaces (Talos static pods, Flux) are outside that sizing.
+        - alert: MemoryAboveRequest
+          expr: |-
+            (
+              max by (namespace, pod, container) (container_memory_working_set_bytes{container!="", container!="POD", namespace!~"kube-system|flux-system"})
+                / on (namespace, pod, container)
+              max by (namespace, pod, container) (kube_pod_container_resource_requests{resource="memory", namespace!~"kube-system|flux-system"})
+              > 1.5
+            )
+            and on (namespace, pod, container)
+            (
+              max by (namespace, pod, container) (container_memory_working_set_bytes{container!="", container!="POD"})
+                - on (namespace, pod, container)
+              max by (namespace, pod, container) (kube_pod_container_resource_requests{resource="memory"})
+              > 128 * 1024 * 1024
+            )
+          for: 6h
+          annotations:
+            summary: >-
+              {{ $labels.namespace }}/{{ $labels.container }} has used {{ $value | humanizePercentage }} of its
+              memory request for 6 hours. Raise resources.requests.memory in its HelmRelease.
+          labels:
+            severity: warning
