@@ -129,6 +129,7 @@ spec:
                   - immich
                   - media
                   - paperless
+                  - pocket-id
       tls:
         certificateRefs:
           - kind: Secret
