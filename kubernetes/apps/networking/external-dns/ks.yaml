@@ -5,6 +5,11 @@ kind: Kustomization
 metadata:
   name: external-dns-cloudflare
 spec:
+  # the gateways carry the label it selects by: apply them first, or a sync sees no public
+  # gateway and deletes every record it owns
+  dependsOn:
+    - name: envoy-gateway-proxy
+      namespace: networking
   interval: 1h
   path: ./kubernetes/apps/networking/external-dns/cloudflare
   prune: true

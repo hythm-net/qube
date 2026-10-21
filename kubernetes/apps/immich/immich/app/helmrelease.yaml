@@ -35,6 +35,9 @@ spec:
               IMMICH_TRUSTED_PROXIES: 10.244.0.0/16
               # the library is an NFS share; its marker files are checked there anyway
               IMMICH_IGNORE_MOUNT_CHECK_ERRORS: "true"
+              # the admin exists: no admin sign-up and no restore-from-backup endpoint on the internet.
+              # Set it back to true to restore a dump through maintenance mode.
+              IMMICH_ALLOW_SETUP: "false"
             probes:
               liveness: &serverProbes
                 enabled: true
@@ -183,10 +186,13 @@ spec:
                 subPath: valkey
     route:
       app:
+        annotations:
+          # envoy-direct is DNS-only: the Cloudflare proxy would cap uploads at 100 MB
+          external-dns.kubernetes.io/cloudflare-proxied: "false"
         hostnames:
           - photos.hythm.net
         parentRefs:
-          - name: envoy-internal
+          - name: envoy-direct
             namespace: networking
         rules:
           - name: app
