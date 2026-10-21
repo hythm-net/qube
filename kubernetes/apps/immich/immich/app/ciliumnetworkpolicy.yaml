@@ -37,6 +37,12 @@ spec:
         - ports:
             - port: "2283"
               protocol: TCP
+    # its own namespace: the answers of Postgres, Valkey and machine learning come back through
+    # their Services and, like CoreDNS's below, fall to the default deny otherwise (measured:
+    # CONNECT_TIMEOUT to immich-postgres-rw:5432 the moment this policy applied)
+    - fromEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: immich
     # CoreDNS's answers come back from the DNS service's address and would fall to the default
     # deny (measured on lyl: "Policy denied", kube-dns -> lyl, udp from 10.245.0.10:53)
     - fromEndpoints:
