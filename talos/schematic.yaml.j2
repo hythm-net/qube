@@ -6,6 +6,8 @@ customization:
     - iommu=pt                                         # PCI Passthrough
     - module_blacklist=igc                             # Disable onboard NIC
     - pcie_aspm=off                                    # Disable PCIe ASPM
+    - ttm.page_pool_size=16777216                      # GPU may borrow 64 GiB of RAM (GTT; + 32 GiB BIOS VRAM)
+    - ttm.pages_limit=16777216                         # GPU may borrow 64 GiB of RAM (default: half of RAM, 47 GiB)
     - talos.config.early={{ ENV.CONFIG_EARLY }}        # Early config
   systemExtensions:
     officialExtensions:
