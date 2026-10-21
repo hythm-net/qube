@@ -75,8 +75,12 @@ spec:
               # GLM's own chat template: tool calls and the thinking switch
               - --jinja
               # read straight into GPU memory; mmap would hold a second copy in page cache
-              - --no-mmap
+              - --load-mode
+              - none
               - --metrics
+            env:
+              # Mesa's shader cache; the root filesystem is read-only
+              XDG_CACHE_HOME: /tmp/cache
             probes:
               liveness: &probes
                 enabled: true
