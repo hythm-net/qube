@@ -196,6 +196,9 @@ spec:
         annotations:
           # envoy-direct is DNS-only: the Cloudflare proxy would cap uploads at 100 MB
           external-dns.kubernetes.io/cloudflare-proxied: "false"
+          gatus.home-operations.com/endpoint: |-
+            name: photos
+            path: /api/server/ping
         hostnames:
           - photos.hythm.net
         parentRefs:

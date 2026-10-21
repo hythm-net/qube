@@ -24,6 +24,7 @@ spec:
               - --auto-httproute
               - --enable-httproute
               - --gateway-name=envoy-external
+              - --gateway-name=envoy-direct
             resources:
               requests:
                 cpu: 10m
