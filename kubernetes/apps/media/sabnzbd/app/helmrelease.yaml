@@ -50,7 +50,8 @@ spec:
             resources:
               requests:
                 cpu: 100m
-                memory: 256Mi
+                # sized for downloading, not idling: article cache (~1G) plus par2/unrar
+                memory: 2Gi
               limits:
                 memory: 8Gi
             securityContext:
