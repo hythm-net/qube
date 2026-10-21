@@ -1,0 +1,57 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/helm.toolkit.fluxcd.io/helmrelease_v2.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: crowdsec
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: crowdsec
+  install:
+    disableSchemaValidation: true # chart schema lacks the kubernetes acquisition source
+  interval: 1h
+  upgrade:
+    disableSchemaValidation: true
+  values:
+    container_runtime: containerd
+    image:
+      repository: mirror.gcr.io/crowdsecurity/crowdsec
+    lapi:
+      envFrom:
+        - secretRef:
+            name: &secret crowdsec-secret
+      podAnnotations:
+        secret.reloader.stakater.com/reload: *secret
+      persistentVolume:
+        # registered bouncers/agents and the decisions; no default StorageClass here
+        data:
+          storageClassName: openebs-hostpath
+        config:
+          storageClassName: openebs-hostpath
+      metrics:
+        serviceMonitor:
+          enabled: true
+    agent:
+      isDeployment: true
+      hostVarLog: false
+      serviceAccountName: crowdsec-agent
+      additionalAcquisition:
+        # only what faces the internet directly; envoy-external sits behind Cloudflare
+        - source: kubernetes
+          namespace: networking
+          selector: gateway.envoyproxy.io/owning-gateway-name=envoy-direct
+          labels:
+            type: envoy
+        # Immich's failed logins, by the client address it takes from envoy's X-Forwarded-For
+        - source: kubernetes
+          namespace: immich
+          selector: app.kubernetes.io/name=immich,app.kubernetes.io/controller=server
+          labels:
+            type: immich
+      env:
+        - name: COLLECTIONS
+          value: yanis-kouidri/envoy gauth-fr/immich
+      metrics:
+        serviceMonitor:
+          enabled: true
