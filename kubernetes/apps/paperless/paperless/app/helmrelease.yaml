@@ -45,6 +45,19 @@ spec:
               # the image starts as root for that install, then runs paperless as 1000 (chthon's owner)
               USERMAP_UID: "1000"
               USERMAP_GID: "1000"
+              # suggestions from the local GLM (ai/llama); nothing leaves the house. Thinking off:
+              # tagging wants an answer, not a monologue
+              PAPERLESS_AI_ENABLED: "true"
+              PAPERLESS_AI_LLM_BACKEND: openai-like
+              PAPERLESS_AI_LLM_ENDPOINT: http://llama.ai.svc.cluster.local:8080/v1
+              PAPERLESS_AI_LLM_MODEL: glm-4.5-air
+              PAPERLESS_AI_LLM_API_KEY: local
+              PAPERLESS_AI_LLM_EXTRA_PARAMS: '{"chat_template_kwargs": {"enable_thinking": false}}'
+              PAPERLESS_AI_LLM_CONTEXT_SIZE: "16384"
+              PAPERLESS_AI_LLM_REQUEST_TIMEOUT: "300"
+              # document chat (RAG) embeds on the CPU, with a model that knows Arabic
+              PAPERLESS_AI_LLM_EMBEDDING_BACKEND: huggingface
+              PAPERLESS_AI_LLM_EMBEDDING_MODEL: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
             envFrom: &envFrom
               - secretRef:
                   name: paperless-secret
