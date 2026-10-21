@@ -37,6 +37,13 @@ spec:
         spec:
           containers:
             - name: grafana
+              # the operator's defaults (256Mi/1Gi) sat under its 711Mi peak
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 896Mi
+                limits:
+                  memory: 2Gi
               env:
                 - name: GF_SECURITY_ADMIN_PASSWORD
                   valueFrom:
