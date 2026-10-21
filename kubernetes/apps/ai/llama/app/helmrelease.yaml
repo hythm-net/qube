@@ -23,7 +23,7 @@ spec:
             # checked against its sha256; resumes an interrupted download, skips a finished one
             image:
               repository: mirror.gcr.io/curlimages/curl
-              tag: 8.17.0@sha256:935d9100e9ba842cdb060de42472c7ca90cfe9a7c96e4dacb55e79e560b3ff40
+              tag: 8.23.0@sha256:11e64e28c5f58c8d93ee95fcf22ac055f48b0bc440e0ce7d8013bbb5ad6aa8ac
             command:
               - sh
               - -c
