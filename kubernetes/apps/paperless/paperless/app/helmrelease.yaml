@@ -116,7 +116,9 @@ spec:
             env: *env
             envFrom: *envFrom
             workingDir: /usr/src/paperless/src
-            command: ["python3", "manage.py", "document_exporter", "/data/nas/export", "--delete"]
+            # skip-checks: the startup check wants the Arabic OCR data the app's entrypoint installs,
+            # which this bare manage.py never gets; the export doesn't OCR
+            command: ["python3", "manage.py", "document_exporter", "/data/nas/export", "--delete", "--skip-checks"]
             resources:
               requests:
                 cpu: 50m
