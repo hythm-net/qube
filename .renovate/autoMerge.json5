@@ -17,6 +17,13 @@
       automerge: false,
     },
     {
+      description: "Stateless tools that have always been 0.x: their minors are routine releases",
+      matchDatasources: ["docker"],
+      matchUpdateTypes: ["minor"],
+      matchPackageNames: ["/karma/", "/kromgo/", "/gatus-sidecar/", "/drm-exporter/", "/cleanrr/", "/brrpolice/"],
+      automerge: true,
+    },
+    {
       description: "Hold minors whose upgrades migrate data a rollback cannot undo",
       matchDatasources: ["docker"],
       matchUpdateTypes: ["minor"],
