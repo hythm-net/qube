@@ -16,6 +16,7 @@ own to the cluster.
 | `nfs` | `/etc/exports` |
 | `snapper` | timelines for `@photos` and `@documents` |
 | `monitoring` | `smartctl_exporter` (pinned release; Renovate bumps it) |
+| `backpack` | the nightly off-site copy to the R2 bucket `backpack` (see below) |
 | `services` | everything that must be enabled and running |
 
 Settings live in [host_vars/chthon.yaml](host_vars/chthon.yaml).
@@ -29,7 +30,26 @@ task hosts:chthon TAGS=nfs       # one part only
 ```
 
 Ansible runs through `uvx` at a pinned version, so nothing is installed system-wide. It
-connects as `claude` with `~/.ssh/qube-ops` (override with `SSH_KEY=`).
+connects as `claude` with `~/.ssh/qube-ops` (override with `SSH_KEY=`). The `backpack` tag
+reads its credentials from Bitwarden, so `BWS_ACCESS_TOKEN` must be exported.
+
+## backpack: the off-site copy
+
+`backpack.timer` runs [files/backpack.sh](files/backpack.sh) nightly at 03:30, after
+Paperless' export (23:30) and Immich's database dump (02:00), into the R2 bucket `backpack`:
+
+| Prefix | What | Encrypted with |
+|---|---|---|
+| `volsync/` | the VolSync kopia repository (`@backup/kopia`), mirrored blob for blob | VolSync's password (`qube`/`volsync_template`) |
+| `files/` | `@photos` and `@documents`, from read-only btrfs snapshots; keeps 3 latest, 7 daily, 4 weekly, 12 monthly | its own password (`homelab`/`backpack`, also in the personal vault) |
+
+Each run pings the Healthchecks.io check **off-site backup** (`/start`, then success or
+`/fail`), so a missed or failed night pages. Run it by hand with `systemctl start
+backpack` and follow it with `journalctl -fu backpack`.
+
+R2 has no S3 Object Lock and its bucket locks would block kopia's overwrites and garbage
+deletes, so the copy isn't immutable: the only key that can write it lives on chthon,
+scoped to this bucket.
 
 ## Rebuilding from bare metal
 

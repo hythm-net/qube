@@ -118,3 +118,22 @@ snapper_settings:
 # not packaged for openSUSE; installed from the release tarball
 # renovate: datasource=github-releases depName=prometheus-community/smartctl_exporter
 smartctl_exporter_version: v0.15.0
+
+# backpack: the nightly off-site copy to the R2 bucket `backpack` (files/backpack.sh).
+# Credentials: Bitwarden homelab/backpack and qube/volsync_template, read at apply time.
+backpack:
+  schedule: "*-*-* 03:30:00"   # after Paperless' export (23:30) and Immich's dump (02:00)
+  sources:
+    - /data/@photos
+    - /data/@documents
+  keep:
+    latest: 3
+    daily: 7
+    weekly: 4
+    monthly: 12
+bitwarden_projects:
+  qube: 8cfc9211-d42e-45af-a73f-1e52d95c417b
+  homelab: b05890fc-97d9-4e5f-a734-b4ea00486b4f
+# renovate: datasource=github-releases depName=kopia/kopia
+kopia_version: v0.23.1
+

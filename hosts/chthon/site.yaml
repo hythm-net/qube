@@ -15,6 +15,10 @@
       ansible.builtin.command: exportfs -ra
       changed_when: true
 
+    - name: Reload systemd
+      ansible.builtin.systemd_service:
+        daemon_reload: true
+
     - name: Restart smartctl_exporter
       ansible.builtin.systemd_service:
         name: smartctl_exporter.service
@@ -223,6 +227,96 @@
             group: root
             mode: "0644"
           notify: Restart smartctl_exporter
+
+    - name: Off-site backup (backpack)
+      tags: [backpack]
+      block:
+        - name: Read the backpack credentials from Bitwarden (needs BWS_ACCESS_TOKEN)
+          ansible.builtin.set_fact:
+            backpack_secret: "{{ (lookup('ansible.builtin.pipe', 'bws secret list ' ~ bitwarden_projects.homelab ~ ' -o json') | from_json | selectattr('key', 'equalto', 'backpack') | first).value | from_json }}"
+            volsync_secret: "{{ (lookup('ansible.builtin.pipe', 'bws secret list ' ~ bitwarden_projects.qube ~ ' -o json') | from_json | selectattr('key', 'equalto', 'volsync_template') | first).value | from_json }}"
+          no_log: true
+
+        - name: Installed kopia version
+          ansible.builtin.command: /usr/local/bin/kopia --version
+          register: kopia_installed
+          changed_when: false
+          failed_when: false
+          check_mode: false
+
+        - name: Install kopia {{ kopia_version }}
+          when: kopia_version | regex_replace('^v', '') not in (kopia_installed.stdout | default(''))
+          vars:
+            release: kopia-{{ kopia_version | regex_replace('^v', '') }}-linux-x64
+            base_url: https://github.com/kopia/kopia/releases/download/{{ kopia_version }}
+          block:
+            - name: Download kopia
+              ansible.builtin.get_url:
+                url: "{{ base_url }}/{{ release }}.tar.gz"
+                checksum: sha256:{{ base_url }}/checksums.txt
+                dest: /tmp/{{ release }}.tar.gz
+                mode: "0644"
+
+            - name: Unpack kopia
+              when: not ansible_check_mode
+              ansible.builtin.unarchive:
+                src: /tmp/{{ release }}.tar.gz
+                dest: /usr/local/bin
+                remote_src: true
+                extra_opts: [--strip-components=1, "{{ release }}/kopia"]
+
+        - name: kopia binary
+          when: not ansible_check_mode or kopia_installed.rc == 0
+          ansible.builtin.file:
+            path: /usr/local/bin/kopia
+            owner: root
+            group: root
+            mode: "0755"
+
+        - name: Credentials (root only)
+          ansible.builtin.template:
+            src: backpack.env.j2
+            dest: /etc/backpack/env
+            owner: root
+            group: root
+            mode: "0600"
+          no_log: true
+          diff: false
+
+        - name: Backup script
+          ansible.builtin.copy:
+            src: backpack.sh
+            dest: /usr/local/libexec/backpack
+            owner: root
+            group: root
+            mode: "0755"
+
+        - name: Service
+          ansible.builtin.copy:
+            src: backpack.service
+            dest: /etc/systemd/system/backpack.service
+            owner: root
+            group: root
+            mode: "0644"
+          notify: Reload systemd
+
+        - name: Timer
+          ansible.builtin.template:
+            src: backpack.timer.j2
+            dest: /etc/systemd/system/backpack.timer
+            owner: root
+            group: root
+            mode: "0644"
+          notify: Reload systemd
+
+        - name: Timer enabled
+          # on the first dry run the unit file is only simulated, so systemd can't know it yet
+          ignore_errors: "{{ ansible_check_mode }}"
+          ansible.builtin.systemd_service:
+            name: backpack.timer
+            enabled: true
+            state: started
+            daemon_reload: true
 
     - name: Services
       tags: [services]
