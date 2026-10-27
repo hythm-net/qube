@@ -50,7 +50,7 @@ drives create it first:
 ```sh
 mkfs.btrfs -L data -d raid10 -m raid10 /dev/nvme1n1 /dev/nvme2n1   # raid10 over two devices
 mount /dev/nvme1n1 /mnt
-btrfs subvolume create /mnt/@media      # and @apps @backup @photos @documents
+btrfs subvolume create /mnt/@media      # and @backup @photos @documents
 umount /mnt                             # then set data_uuid in host_vars
 ```
 

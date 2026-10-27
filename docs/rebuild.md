@@ -70,7 +70,7 @@ find it by UUID and every share is back. Only on new data drives do you create t
 (also described there), and then the data has to come from an off-site copy (see
 [Gaps](#known-gaps)).
 
-Check that all five exports are up (`exportfs -s`).
+Check that all four export paths are up (`exportfs -s`).
 
 ## 6. vore: the cluster
 
