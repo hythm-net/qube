@@ -21,7 +21,8 @@ chthon's storage). Names are explained in [lore.md](lore.md).
     `quad-admin`, the OPNsense API key `opnsense`, `saves-deploy-key`, `opnsense-heartbeat`)
 - **GitHub**, account `hythm7`, which owns the org `hythm-net`:
   - `hythm-net/qube`: this repo
-  - `hythm-net/saves` (private): the router's `config.xml` history, the switch export
+  - `hythm-net/saves` (private): the router's `config.xml` history on `main`, the switch
+    export on the `teleporter` branch
 - **A USB stick**, and `quad` (the KVM) or a screen and keyboard for consoles.
 
 ## 1. slipgate: the router
@@ -45,8 +46,8 @@ chthon's storage). Names are explained in [lore.md](lore.md).
 
 ## 2. teleporter: the switch
 
-Factory-reset it, log in (`teleporter-admin`), and import the latest export from
-`saves/teleporter/`. Without an export, configure it from the port table in
+Factory-reset it, log in (`teleporter-admin`), and import `teleporter/switch.cfg` from the
+`teleporter` branch of `saves`. Without an export, configure it from the port table in
 [hosts/teleporter](../hosts/teleporter/README.md), which holds every setting that matters.
 Then check with `hosts/teleporter/portmap.py`.
 
@@ -108,5 +109,5 @@ Then check:
 
 - **No off-site copy yet.** If chthon's data array dies, it takes photos, documents, the
   kopia repository and the database dumps with it.
-- The switch's configuration export isn't in `saves` until someone exports it.
+- The switch export in `saves` is a snapshot from 2026-10-27: re-export after changing the switch.
 - The UniFi controller's own backup lives on `ranger`. Keep a copy of its autobackup.
