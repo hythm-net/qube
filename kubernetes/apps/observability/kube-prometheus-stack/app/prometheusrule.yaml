@@ -72,8 +72,9 @@ spec:
           labels:
             severity: warning
 
-        # Talos/tuppr upgrades can time out waiting for Ready after a good reboot and leave the
-        # node cordoned; the stock node alerts all stay silent while a node is unschedulable.
+        # Upgrades don't drain this single node (talos:upgrade-node passes --drain=false, tuppr
+        # does the same on one node), so a cordon that lasts is forgotten maintenance; the stock
+        # node alerts all stay silent while a node is unschedulable.
         - alert: NodeCordoned
           expr: |-
             max by (node) (kube_node_spec_unschedulable) == 1

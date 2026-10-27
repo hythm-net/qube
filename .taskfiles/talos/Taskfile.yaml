@@ -99,7 +99,11 @@ tasks:
   upgrade-node:
     desc: Upgrade Talos on a single node [NODE=required]
     prompt: Upgrade Talos node '{{.NODE}}' to {{.TALOS_IMAGE}} ... continue?
-    cmd: talosctl --nodes {{.NODE}} upgrade --image={{.TALOS_IMAGE}} --reboot-mode=powercycle --timeout=10m
+    # --drain=false: talosctl's drain cordons through the Kubernetes API and only this process
+    # uncordons, after the reboot, giving up on the first non-retryable API error from the
+    # fresh control plane. On one node there is nowhere to drain to, and Talos stops the pods
+    # gracefully itself.
+    cmd: talosctl --nodes {{.NODE}} upgrade --image={{.TALOS_IMAGE}} --reboot-mode=powercycle --drain=false --timeout=10m
     vars:
       # version comes from the installer pin in cluster.yaml.j2 (Renovate keeps it and tuppr in sync)
       TALOS_VERSION:
