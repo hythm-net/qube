@@ -71,6 +71,9 @@ spec:
               {{- else }}
                 Alert description not available
               {{- end }}
+              {{- if eq .Status "resolved" }}
+                <small>{{ .StartsAt | tz "America/New_York" | date "Jan 2 15:04" }} → {{ .EndsAt | tz "America/New_York" | date "15:04 MST" }}</small>
+              {{- end }}
               {{- if gt (len .Labels.SortedPairs) 0 }}
                 <small>
                   {{- range .Labels.SortedPairs }}

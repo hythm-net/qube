@@ -56,3 +56,18 @@ spec:
               memory request for 6 hours. Raise resources.requests.memory in its HelmRelease.
           labels:
             severity: warning
+
+    - name: reboot.rules
+      rules:
+        # After an outage this tells a power cut (or crash) from a lost internet line. Talos
+        # upgrades fire it too.
+        - alert: NodeRebooted
+          expr: |-
+            (time() - max by (instance) (node_boot_time_seconds))
+              * on (instance) group_left (nodename) max by (instance, nodename) (node_uname_info)
+            < 900
+          annotations:
+            summary: >-
+              {{ $labels.nodename }} booted {{ $value | humanizeDuration }} ago
+          labels:
+            severity: warning

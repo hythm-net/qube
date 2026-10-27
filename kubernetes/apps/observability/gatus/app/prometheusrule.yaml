@@ -17,3 +17,18 @@ spec:
               The {{ $labels.name }} endpoint is down
           labels:
             severity: critical
+
+        # During an outage Gatus' connectivity checker (1.1.1.1:53) pauses every check, so the
+        # connectivity results either stay at their last failure or stop coming. Pushover is
+        # unreachable meanwhile: this arrives once the line is back, with the outage window.
+        - alert: InternetDown
+          expr: |-
+            max(gatus_results_endpoint_success{group="connectivity"}) == 0
+              or
+            sum(increase(gatus_results_total{group="connectivity"}[5m])) == 0
+          for: 5m
+          annotations:
+            summary: >-
+              The internet is unreachable: Cloudflare, Google and Quad9 all fail
+          labels:
+            severity: critical
