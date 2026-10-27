@@ -273,6 +273,14 @@
             group: root
             mode: "0755"
 
+        - name: Credentials directory (root only)
+          ansible.builtin.file:
+            path: /etc/backpack
+            state: directory
+            owner: root
+            group: root
+            mode: "0700"
+
         - name: Credentials (root only)
           ansible.builtin.template:
             src: backpack.env.j2
