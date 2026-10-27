@@ -12,7 +12,10 @@ S3=(--bucket="$BACKPACK_BUCKET" --endpoint="$BACKPACK_ENDPOINT" --region=auto)
 
 ping_hc() { [ -n "${BACKPACK_HEALTHCHECK_URL:-}" ] && curl -fsS -m 10 --retry 3 -o /dev/null "${BACKPACK_HEALTHCHECK_URL}$1" || true; }
 cleanup() {
-  for snap in "$STAGING"/*; do [ -d "$snap" ] && btrfs subvolume delete "$snap" >/dev/null; done
+  local snap
+  for snap in "$STAGING"/*; do
+    if [ -d "$snap" ]; then btrfs subvolume delete "$snap" >/dev/null; fi
+  done
 }
 trap 'cleanup; ping_hc /fail' ERR
 ping_hc /start
@@ -27,7 +30,7 @@ if ! KOPIA_PASSWORD="$VOLSYNC_KOPIA_PASSWORD" kopia "${VOLSYNC[@]}" repository s
     repository connect filesystem --path=/data/@backup/kopia --readonly >/dev/null
 fi
 KOPIA_PASSWORD="$VOLSYNC_KOPIA_PASSWORD" kopia "${VOLSYNC[@]}" \
-  repository sync-to s3 "${S3[@]}" --prefix=volsync/ --delete --no-progress
+  repository sync-to s3 "${S3[@]}" --prefix=volsync/ --delete --parallel=4 --no-progress
 
 # 2. Photos and documents: a fixed path per source, so kopia keeps one history per source.
 export KOPIA_PASSWORD="$FILES_KOPIA_PASSWORD"
@@ -43,6 +46,8 @@ fi
 kopia "${FILES[@]}" policy set --global \
   --keep-latest="$BACKPACK_KEEP_LATEST" --keep-hourly=0 --keep-daily="$BACKPACK_KEEP_DAILY" \
   --keep-weekly="$BACKPACK_KEEP_WEEKLY" --keep-monthly="$BACKPACK_KEEP_MONTHLY" --keep-annual=0 >/dev/null
+# this client owns the files repository, so kopia runs its scheduled maintenance itself after
+# each snapshot (quick hourly, full every 24h)
 kopia "${FILES[@]}" maintenance set --owner=me >/dev/null
 
 for src in $BACKPACK_SOURCES; do
@@ -51,6 +56,5 @@ for src in $BACKPACK_SOURCES; do
   kopia "${FILES[@]}" snapshot create "$STAGING/$name" --no-progress --description="$src"
   btrfs subvolume delete "$STAGING/$name" >/dev/null
 done
-kopia "${FILES[@]}" maintenance run --auto >/dev/null
 
 ping_hc ""
