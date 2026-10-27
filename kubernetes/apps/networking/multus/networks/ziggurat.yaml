@@ -3,12 +3,12 @@
 apiVersion: k8s.cni.cncf.io/v1
 kind: NetworkAttachmentDefinition
 metadata:
-  name: vpn
+  name: ziggurat
 spec:
   config: |-
     {
       "cniVersion": "1.1.0",
-      "name": "vpn",
+      "name": "ziggurat",
       "plugins": [
         {
           "type": "macvlan",
