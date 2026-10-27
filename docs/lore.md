@@ -33,7 +33,7 @@ VLANs are E1 maps. Tags don't follow map order; that is history, not a rule.
 |---|---|---|---|---|
 | `complex` | untagged | 192.168.0.0/24 | E1M1 The Slipgate Complex | network gear: slipgate, teleporter, scrag, quad |
 | `necropolis` | 10 | 192.168.10.0/24 | E1M3 The Necropolis | servers: vore, chthon |
-| `gloom` | 20 | 192.168.20.0/24 | E1M5 Gloom Keep | Kubernetes LoadBalancer IPs (Cilium pool `gloom`) |
+| `gloom` | 20 | 192.168.20.0/24 | E1M5 Gloom Keep | services: every address something is served from (today the Kubernetes API VIP and the Cilium LoadBalancer pool `gloom`) |
 | `house` | 30 | 192.168.30.0/24 | E1M7 The House of Chthon | IoT: DNS and internet only |
 | `castle` | 40 | 192.168.40.0/24 | E1M2 Castle of the Damned | trusted clients (ranger) |
 | `grotto` | 50 | 192.168.50.0/24 | E1M4 The Grisly Grotto | guests: DNS and internet only |
