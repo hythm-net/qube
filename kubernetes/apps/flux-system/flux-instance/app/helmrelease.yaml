@@ -20,7 +20,7 @@ spec:
         - notification-controller
       sync:
         kind: GitRepository
-        url: https://github.com/hythm7/qube
+        url: https://github.com/hythm-net/qube
         provider: github
         pullSecret: github-app-auth
         ref: refs/heads/main
