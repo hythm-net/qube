@@ -117,4 +117,4 @@ snapper_settings:
 
 # not packaged for openSUSE; installed from the release tarball
 # renovate: datasource=github-releases depName=prometheus-community/smartctl_exporter
-smartctl_exporter_version: v0.12.0
+smartctl_exporter_version: v0.15.0
