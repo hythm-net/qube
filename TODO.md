@@ -6,10 +6,10 @@
 - [ ] **Clients**: repoint Jellyfin apps / bookmarks `play.ahla.show → play.hythm.net`; Seerr Application URL → `requests.hythm.net`; Wizarr server URL → `join.hythm.net`
 - [x] **Cloudflare (ahla.show)**: cluster-owned records deleted (only the apex A remains); let the domain lapse
 - [x] **Bitwarden SM**: retired keys deleted (`ahlatoken`, `ahla_*`, `ahlabot`, `chatwoot`, `lldap`, `authelia`, `wizarr_stripe_bridge`, `cloudnative_pg`, `*_4k`). Still present but unreferenced — decide later: `bitwarden`, `domains`, `eweka`, `nzbfinder`, `nzbgeek`, `home_assistant`, `paperless`, `pushover`, `slskd`, `sops`
-- [ ] **GitHub org `ahlanet`**: `website`, `wizarr-stripe-bridge`, `marketing` archived ✔; still to do in the web UI: uninstall `ahlabot` (https://github.com/organizations/ahlanet/settings/installations/125666771), then delete or leave the org
+- [x] **GitHub org `ahlanet`**: deleted 2026-10-27 (its archived repos, images and `ahlabot` with it)
 
 - [x] **Kubernetes**: orphaned `ahla-*-tls` secrets deleted
-- [ ] **GitHub**: delete the unused `qube-runner` GitHub App in the web UI (https://github.com/settings/apps/qube-runner/advanced) — `novyxz` covers the runner
+- [x] **GitHub**: the unused `qube-runner` GitHub App is gone (no longer listed under the account, 2026-10-27) — `novyxz` covers the runner
 - [x] **Renovate catch-up**: done 2026-09-30 — Talos v1.14.2, Kubernetes v1.37.1, all charts/containers current (kube-prometheus-stack 88.2.0 waits on its weekly schedule)
 - [ ] **Upstream pass**: review the last ~3 months of buroa/home-ops and onedr0p/home-ops (workflows, presets, apps); check the DRA driver upstream for a fix to ResourceSlices vanishing after a plugin restart
 
