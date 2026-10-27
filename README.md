@@ -47,12 +47,14 @@ Single-node [Talos Linux](https://talos.dev) cluster running the home lab. Media
 [Seerr](https://github.com/seerr-team/seerr) for requests, and
 [Wizarr](https://github.com/wizarrrr/wizarr) for invites. Everything is
 reconciled from this repository by [Flux](https://fluxcd.io); dependencies are
-updated by [Renovate](https://renovatebot.com).
+updated by [Renovate](https://renovatebot.com). Machines, VLANs and tunnels are named
+after Quake; the scheme is in [docs/lore.md](docs/lore.md).
 
 ## Repository layout
 
 ```
 📁 bootstrap     # helmfile + kustomize used once to bring the cluster up
+📁 docs          # lore.md: the Quake naming scheme
 📁 kubernetes
   📁 apps        # one directory per namespace, one Flux Kustomization per app
   📁 components  # reusable kustomize components (volsync, alerts, namespace, …)

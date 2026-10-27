@@ -93,7 +93,7 @@ tasks:
       BOT_APP_INSTALLATION_ID:
         sh: bws --access-token {{.BWS_ACCESS_TOKEN}} secret get {{.BOT_SECRET_ID}} | jq -r '.value | fromjson .BOT_APP_INSTALLATION_ID'
     vars:
-      BOT_SECRET_ID: 24a40e61-9205-4128-a0fb-2214684b3328
+      BOT_SECRET_ID: e6c289ae-74e8-4f5a-812e-b4f000bc302e
     requires:
       vars: [BWS_ACCESS_TOKEN]
     preconditions:
