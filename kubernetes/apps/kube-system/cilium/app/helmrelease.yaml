@@ -18,6 +18,9 @@ spec:
       datapathMode: netkit
       masquerade: true
       preallocateMaps: true
+      # Cilium's datapath on bond0 drops VLAN-tagged traffic unless the VLAN link is a Cilium
+      # device; house (30) and ziggurat (60) carry Multus macvlans, not Cilium traffic.
+      vlanBypass: [30, 60]
     bpfClockProbe: true
     bgpControlPlane:
       enabled: true
