@@ -41,7 +41,7 @@ Paperless' export (23:30) and Immich's database dump (02:00), into the R2 bucket
 | Prefix | What | Encrypted with |
 |---|---|---|
 | `volsync/` | the VolSync kopia repository (`@backup/kopia`), mirrored blob for blob | VolSync's password (`qube`/`volsync_template`) |
-| `files/` | `@photos` and `@documents`, from read-only btrfs snapshots; keeps 3 latest, 7 daily, 4 weekly, 12 monthly | its own password (`homelab`/`backpack`, also in the personal vault) |
+| `files/` | `@photos` and `@documents`, from read-only btrfs snapshots; keeps 3 latest, 7 daily, 4 weekly, 12 monthly | its own password (`rune`/`backpack`, also in the personal vault) |
 
 Each run pings the Healthchecks.io check **off-site backup** (`/start`, then success or
 `/fail`), so a missed or failed night pages. Run it by hand with `systemctl start
@@ -57,7 +57,7 @@ The playbook starts from a fresh openSUSE Leap 16 install. Before it can run:
 
 1. Install Leap 16 on `nvme0n1` (the OS disk only; leave `nvme1n1`/`nvme2n1` alone). Set the
    hostname `chthon`, create the user `hythm`, and set the root password from Bitwarden
-   `homelab`/`chthon-root`.
+   `rune`/`chthon-root`.
 2. Give it 192.168.10.5 (or let the playbook's `network` tag do it from a temporary DHCP
    address), and allow SSH.
 3. Create the `claude` account with the key from `host_vars` (or run the first pass as
