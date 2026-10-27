@@ -55,6 +55,7 @@ after Quake; the scheme is in [docs/lore.md](docs/lore.md).
 ```
 📁 bootstrap     # helmfile + kustomize used once to bring the cluster up
 📁 docs          # lore.md: the Quake naming scheme
+📁 hosts         # machines outside the cluster: chthon (Ansible), teleporter (port map)
 📁 kubernetes
   📁 apps        # one directory per namespace, one Flux Kustomization per app
   📁 components  # reusable kustomize components (volsync, alerts, namespace, …)
