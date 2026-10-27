@@ -50,6 +50,9 @@ automation:
 # btrfs RAID10 (data, metadata, system) over nvme1n1 + nvme2n1; every top-level subvolume
 # is mounted on its own and exported on its own (there is no /data export)
 data_uuid: 23208694-7a23-43b7-a41d-0b187f2ad9cc
+# appended to every data mount: a slow or missing array must not hold the boot (and SSH)
+# hostage; chthon comes up reachable and only the exports are missing
+data_mount_opts: nofail,x-systemd.device-timeout=30s
 subvolumes:
   - name: "@media"
     fstype: auto
