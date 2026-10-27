@@ -24,3 +24,5 @@ spec:
     - dial.*tcp.*timeout
     - waiting.*socket
     - dial.*tcp.*unreachable
+    # CoreDNS is not up yet for the first minute after a node boot (Talos upgrades)
+    - lookup.*connection refused
