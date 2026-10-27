@@ -110,7 +110,7 @@
             path: /data/{{ item.name }}
             src: UUID={{ data_uuid }}
             fstype: "{{ item.fstype | default('btrfs') }}"
-            opts: "{{ item.opts }}"
+            opts: "{{ item.opts }},{{ data_mount_opts }}"
             state: mounted
           loop: "{{ subvolumes }}"
           loop_control:
