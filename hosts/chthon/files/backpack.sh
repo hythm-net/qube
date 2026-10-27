@@ -7,6 +7,7 @@ set -euo pipefail
 
 export KOPIA_CHECK_FOR_UPDATES=false
 STATE=/var/lib/backpack
+CACHE=/var/cache/backpack            # one subdirectory per repository, never shared
 STAGING=/data/@backup/.backpack      # same btrfs filesystem as the sources
 S3=(--bucket="$BACKPACK_BUCKET" --endpoint="$BACKPACK_ENDPOINT" --region=auto)
 
@@ -27,7 +28,8 @@ cleanup
 VOLSYNC=(--config-file="$STATE/volsync.config")
 if ! KOPIA_PASSWORD="$VOLSYNC_KOPIA_PASSWORD" kopia "${VOLSYNC[@]}" repository status >/dev/null 2>&1; then
   KOPIA_PASSWORD="$VOLSYNC_KOPIA_PASSWORD" kopia "${VOLSYNC[@]}" \
-    repository connect filesystem --path=/data/@backup/kopia --readonly >/dev/null
+    repository connect filesystem --path=/data/@backup/kopia --readonly \
+    --cache-directory="$CACHE/volsync" >/dev/null
 fi
 KOPIA_PASSWORD="$VOLSYNC_KOPIA_PASSWORD" kopia "${VOLSYNC[@]}" \
   repository sync-to s3 "${S3[@]}" --prefix=volsync/ --delete --parallel=4 --no-progress
@@ -36,9 +38,11 @@ KOPIA_PASSWORD="$VOLSYNC_KOPIA_PASSWORD" kopia "${VOLSYNC[@]}" \
 export KOPIA_PASSWORD="$FILES_KOPIA_PASSWORD"
 FILES=(--config-file="$STATE/files.config")
 if ! kopia "${FILES[@]}" repository status >/dev/null 2>&1; then
-  if ! out=$(kopia "${FILES[@]}" repository connect s3 "${S3[@]}" --prefix=files/ 2>&1); then
+  if ! out=$(kopia "${FILES[@]}" repository connect s3 "${S3[@]}" --prefix=files/ \
+             --cache-directory="$CACHE/files" 2>&1); then
     case "$out" in
-      *"not initialized"*) kopia "${FILES[@]}" repository create s3 "${S3[@]}" --prefix=files/ ;;
+      *"not initialized"*) kopia "${FILES[@]}" repository create s3 "${S3[@]}" --prefix=files/ \
+                            --cache-directory="$CACHE/files" ;;
       *) echo "$out" >&2; false ;;
     esac
   fi
