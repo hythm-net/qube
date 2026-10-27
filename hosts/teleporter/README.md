@@ -1,7 +1,7 @@
 # teleporter
 
 The switch (moves traffic *within* a level, see [docs/lore.md](../../docs/lore.md)): an
-SL520S-5T1XS on `complex`, 192.168.0.254. Login: Bitwarden `homelab`/`teleporter-admin`.
+SL520S-5T1XS on `complex`, 192.168.0.254. Login: Bitwarden `rune`/`teleporter-admin`.
 
 ## Port map
 

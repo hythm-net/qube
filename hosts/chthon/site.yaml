@@ -233,7 +233,7 @@
       block:
         - name: Read the backpack credentials from Bitwarden (needs BWS_ACCESS_TOKEN)
           ansible.builtin.set_fact:
-            backpack_secret: "{{ (lookup('ansible.builtin.pipe', 'bws secret list ' ~ bitwarden_projects.homelab ~ ' -o json') | from_json | selectattr('key', 'equalto', 'backpack') | first).value | from_json }}"
+            backpack_secret: "{{ (lookup('ansible.builtin.pipe', 'bws secret list ' ~ bitwarden_projects.rune ~ ' -o json') | from_json | selectattr('key', 'equalto', 'backpack') | first).value | from_json }}"
             volsync_secret: "{{ (lookup('ansible.builtin.pipe', 'bws secret list ' ~ bitwarden_projects.qube ~ ' -o json') | from_json | selectattr('key', 'equalto', 'volsync_template') | first).value | from_json }}"
           no_log: true
 

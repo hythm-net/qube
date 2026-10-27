@@ -23,6 +23,7 @@ named after the game's places, monsters and items.
 | **Ranger**, the player | the owner's workstation | `ranger` |
 | The Ranger's **weapons** | the owner's other devices | `axe` (phone) |
 | The **START** hub (links every episode) | a future central hub between sites | *(reserved: `start`)* |
+| **Runes**: the keys collected to reach the end | the vault of master keys outside the cluster (Bitwarden project) | `rune` (next to the cluster's own project `qube`) |
 
 ## Episode 1: Dimension of the Doomed (New York)
 

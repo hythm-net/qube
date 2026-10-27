@@ -17,7 +17,7 @@ chthon's storage). Names are explained in [lore.md](lore.md).
 - **Bitwarden.** Your master password opens the personal vault, which holds the Secrets
   Manager machine-account token. That token opens the two projects everything else needs:
   - `qube`: the cluster (Talos bundle `talos`, the `novyxz` bot, every app's keys)
-  - `homelab`: everything outside it (`slipgate-root`, `chthon-root`, `teleporter-admin`,
+  - `rune`: the master keys for everything outside it (`slipgate-root`, `chthon-root`, `teleporter-admin`,
     `quad-admin`, the OPNsense API key `opnsense`, `saves-deploy-key`, `opnsense-heartbeat`)
 - **GitHub**, account `hythm7`, which owns the org `hythm-net`:
   - `hythm-net/qube`: this repo
