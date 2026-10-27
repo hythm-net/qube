@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+# backpack: chthon's nightly off-site copy to the R2 bucket `backpack` (docs/rebuild.md).
+#   volsync/  the VolSync kopia repository, mirrored blob for blob (already encrypted)
+#   files/    a kopia repository of @photos and @documents (read-only snapshots, own password)
+# Settings and credentials come from /etc/backpack/env (EnvironmentFile of backpack.service).
+set -euo pipefail
+
+export KOPIA_CHECK_FOR_UPDATES=false
+STATE=/var/lib/backpack
+STAGING=/data/@backup/.backpack      # same btrfs filesystem as the sources
+S3=(--bucket="$BACKPACK_BUCKET" --endpoint="$BACKPACK_ENDPOINT" --region=auto)
+
+ping_hc() { [ -n "${BACKPACK_HEALTHCHECK_URL:-}" ] && curl -fsS -m 10 --retry 3 -o /dev/null "${BACKPACK_HEALTHCHECK_URL}$1" || true; }
+cleanup() {
+  for snap in "$STAGING"/*; do [ -d "$snap" ] && btrfs subvolume delete "$snap" >/dev/null; done
+}
+trap 'cleanup; ping_hc /fail' ERR
+ping_hc /start
+mkdir -p "$STATE" "$STAGING"
+cleanup
+
+# 1. App configs: mirror the VolSync repository. This client never owns it, so it never
+#    runs maintenance on it; VolSync's KopiaMaintenance does.
+VOLSYNC=(--config-file="$STATE/volsync.config")
+if ! KOPIA_PASSWORD="$VOLSYNC_KOPIA_PASSWORD" kopia "${VOLSYNC[@]}" repository status >/dev/null 2>&1; then
+  KOPIA_PASSWORD="$VOLSYNC_KOPIA_PASSWORD" kopia "${VOLSYNC[@]}" \
+    repository connect filesystem --path=/data/@backup/kopia --readonly >/dev/null
+fi
+KOPIA_PASSWORD="$VOLSYNC_KOPIA_PASSWORD" kopia "${VOLSYNC[@]}" \
+  repository sync-to s3 "${S3[@]}" --prefix=volsync/ --delete --no-progress
+
+# 2. Photos and documents: a fixed path per source, so kopia keeps one history per source.
+export KOPIA_PASSWORD="$FILES_KOPIA_PASSWORD"
+FILES=(--config-file="$STATE/files.config")
+if ! kopia "${FILES[@]}" repository status >/dev/null 2>&1; then
+  if ! out=$(kopia "${FILES[@]}" repository connect s3 "${S3[@]}" --prefix=files/ 2>&1); then
+    case "$out" in
+      *"not initialized"*) kopia "${FILES[@]}" repository create s3 "${S3[@]}" --prefix=files/ ;;
+      *) echo "$out" >&2; false ;;
+    esac
+  fi
+fi
+kopia "${FILES[@]}" policy set --global \
+  --keep-latest="$BACKPACK_KEEP_LATEST" --keep-hourly=0 --keep-daily="$BACKPACK_KEEP_DAILY" \
+  --keep-weekly="$BACKPACK_KEEP_WEEKLY" --keep-monthly="$BACKPACK_KEEP_MONTHLY" --keep-annual=0 >/dev/null
+kopia "${FILES[@]}" maintenance set --owner=me >/dev/null
+
+for src in $BACKPACK_SOURCES; do
+  name=$(basename "$src")                                   # @photos, @documents
+  btrfs subvolume snapshot -r "$src" "$STAGING/$name" >/dev/null
+  kopia "${FILES[@]}" snapshot create "$STAGING/$name" --no-progress --description="$src"
+  btrfs subvolume delete "$STAGING/$name" >/dev/null
+done
+kopia "${FILES[@]}" maintenance run --auto >/dev/null
+
+ping_hc ""

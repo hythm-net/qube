@@ -67,8 +67,24 @@ keyboard stayed dead while chthon hung early in boot, and worked after a power c
 Follow [hosts/chthon](../hosts/chthon/README.md): install openSUSE Leap 16 on the OS disk
 only, then `task hosts:chthon`. **An OS reinstall doesn't touch the data array**: the mounts
 find it by UUID and every share is back. Only on new data drives do you create the array
-(also described there), and then the data has to come from an off-site copy (see
-[Gaps](#known-gaps)).
+(also described there) and pull the data back from `backpack` (below) before step 6.
+
+### From the off-site copy (`backpack` on R2)
+
+With the playbook applied (it installs kopia and `/etc/backpack/env`), as root on chthon:
+
+```sh
+set -a; . /etc/backpack/env; set +a
+S3="--bucket=$BACKPACK_BUCKET --endpoint=$BACKPACK_ENDPOINT --region=auto"
+# app configs: put the VolSync repository back where the cluster expects it
+KOPIA_PASSWORD=$VOLSYNC_KOPIA_PASSWORD kopia repository connect s3 $S3 --prefix=volsync/ --config-file=/tmp/v.config
+KOPIA_PASSWORD=$VOLSYNC_KOPIA_PASSWORD kopia repository sync-to filesystem --path=/data/@backup/kopia --config-file=/tmp/v.config
+chown -R hythm:hythm /data/@backup/kopia
+# photos and documents: newest snapshot of each into its subvolume
+KOPIA_PASSWORD=$FILES_KOPIA_PASSWORD kopia repository connect s3 $S3 --prefix=files/ --config-file=/tmp/f.config
+KOPIA_PASSWORD=$FILES_KOPIA_PASSWORD kopia snapshot list --all --config-file=/tmp/f.config
+KOPIA_PASSWORD=$FILES_KOPIA_PASSWORD kopia snapshot restore <snapshot-id> /data/@photos --config-file=/tmp/f.config   # and @documents
+```
 
 Check that all four export paths are up (`exportfs -s`).
 
@@ -107,7 +123,9 @@ Then check:
 
 ## Known gaps
 
-- **No off-site copy yet.** If chthon's data array dies, it takes photos, documents, the
-  kopia repository and the database dumps with it.
+- **The off-site copy isn't immutable.** `backpack` on R2 has no lock (R2 can't lock what
+  kopia needs to rewrite), so someone controlling chthon could delete it. A locked second
+  copy (Backblaze B2 with Object Lock, or a box at another site) would close that. `@media`
+  isn't copied off-site on purpose: it can be re-downloaded.
 - The switch export in `saves` is a snapshot from 2026-10-27: re-export after changing the switch.
 - The UniFi controller's own backup lives on `ranger`. Keep a copy of its autobackup.

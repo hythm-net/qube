@@ -1,0 +1,12 @@
+[Unit]
+Description=backpack: off-site copy of chthon's irreplaceable data to R2
+Wants=network-online.target
+After=network-online.target nfs-server.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/backpack/env
+ExecStart=/usr/local/libexec/backpack
+Nice=10
+IOSchedulingClass=idle
+TimeoutStartSec=6h

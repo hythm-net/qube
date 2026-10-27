@@ -1,0 +1,10 @@
+[Unit]
+Description=Nightly backpack run (after Paperless' export and Immich's dump)
+
+[Timer]
+OnCalendar={{ backpack.schedule }}
+RandomizedDelaySec=10m
+Persistent=true
+
+[Install]
+WantedBy=timers.target
