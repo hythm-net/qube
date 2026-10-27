@@ -1,0 +1,6 @@
+---
+all:
+  hosts:
+    chthon:
+      ansible_host: chthon.internal
+      ansible_user: claude

@@ -20,6 +20,7 @@ includes:
   talos: .taskfiles/talos
   volsync: .taskfiles/volsync
   github: .taskfiles/github
+  hosts: .taskfiles/hosts
   workstation: .taskfiles/workstation
 
 tasks:

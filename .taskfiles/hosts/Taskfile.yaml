@@ -1,0 +1,26 @@
+---
+version: '3'
+
+# Hosts outside the cluster, configured with Ansible from hosts/<name>/ (run through uv,
+# so nothing is installed system-wide)
+
+vars:
+  HOSTS_DIR: '{{.ROOT_DIR}}/hosts'
+  # renovate: datasource=pypi depName=ansible-core
+  ANSIBLE_CORE_VERSION: 2.21.5
+  ANSIBLE: uvx --from ansible-core=={{.ANSIBLE_CORE_VERSION}}
+
+tasks:
+
+  chthon:
+    desc: Apply chthon's playbook [CHECK=true for a dry run with diff] [TAGS=] [SSH_KEY={{.SSH_KEY}}]
+    dir: '{{.HOSTS_DIR}}/chthon'
+    cmds:
+      - '{{.ANSIBLE}} ansible-galaxy collection install -r requirements.yaml -p .collections >/dev/null'
+      - >-
+        {{.ANSIBLE}} ansible-playbook site.yaml --diff --private-key {{.SSH_KEY}}
+        {{if .CHECK}}--check{{end}} {{if .TAGS}}--tags {{.TAGS}}{{end}} {{.CLI_ARGS}}
+    vars:
+      SSH_KEY: '{{.SSH_KEY | default "~/.ssh/qube-ops"}}'
+    preconditions:
+      - which uvx
