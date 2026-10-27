@@ -17,8 +17,9 @@ learned MACs against the known devices:
 | ge1/5 | up | `slipgate` (uplink to the router) | 1 complex | 10, 20, 30, 40, 50, 60 |
 | xe1/6 | down | — (SFP+) | 1 complex | — |
 
-- `gloom` (20) only reaches the router: LoadBalancer IPs get to vore through BGP, not as a
-  VLAN on its wire.
+- `gloom` (20), the services VLAN, only reaches the router today: Kubernetes LoadBalancer
+  IPs get to vore through BGP, not as a VLAN on its wire. A service outside Kubernetes would
+  need 20 tagged on its port.
 - `vore` carries `house` (30) and `ziggurat` (60) tagged for Multus macvlans (IoT and the
   qbittorrent VPN path).
 - The AP carries `castle`, `grotto` and `ziggurat` for its SSIDs. `house` is not on it yet:
