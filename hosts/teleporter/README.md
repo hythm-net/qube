@@ -35,9 +35,15 @@ New devices show up as raw MACs until they are added to `KNOWN` in the script.
 ## Configuration backup
 
 The switch has no API for its configuration, so after changing it: **web UI → export the
-configuration**, then commit the file to the private repo `hythm-net/saves` under
-`teleporter/` (never here: it holds the admin password hash). Restoring is the same file
-through the web UI's import.
+configuration**, then commit it as `teleporter/switch.cfg` on the **`teleporter` branch** of
+the private repo `hythm-net/saves` (never here: it holds the admin credentials and the SNMP
+community). Restoring is the same file through the web UI's import.
+
+**Never commit to `saves`' `main`.** It belongs to slipgate's `os-git-backup`, which pushes
+without pulling first, so any other commit there makes its next push fail ("git out of sync").
+
+The export also holds what SNMP can't show: PoE (`ge1/1` powers `scrag` at `high-power bt`,
+120 W budget), the default route to slipgate, and SSH management.
 
 To rebuild it by hand instead, the table above is the whole configuration that matters:
 the VLANs 1/10/20/30/40/50/60, each port's untagged VLAN and tagged set, plus the
