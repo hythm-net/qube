@@ -1,0 +1,11 @@
+# Managed by Ansible (hosts/chthon in hythm-net/qube); edit host_vars/chthon.yaml, not this file.
+# See exports(5).
+{% for export in exports %}
+{% for client in export.clients %}
+{% if client is mapping %}
+{{ export.path }}  {{ client.host }}   # {{ client.note }}
+{% else %}
+{{ export.path }}  {{ client }}
+{% endif %}
+{% endfor %}
+{% endfor %}

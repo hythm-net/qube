@@ -1,0 +1,123 @@
+---
+timezone: America/New_York
+
+packages:
+  - btrfsmaintenance
+  - btrfsprogs
+  - chrony
+  - cockpit
+  - cockpit-networkmanager
+  - cockpit-packages
+  - cockpit-storaged
+  - golang-github-prometheus-node_exporter
+  - nfs-kernel-server
+  - smartmontools
+  - snapper
+
+services:
+  - chronyd.service
+  - cockpit.socket
+  - nfs-server.service
+  - prometheus-node_exporter.service
+  - smartd.service
+  - sshd.service
+
+# Addresses stay numeric where DNS can't be relied on (the network config itself, and NFS,
+# which matches clients by reverse DNS at mount time); they are named once here, matching
+# docs/lore.md, and referenced by name below.
+networks:
+  necropolis: 192.168.10.0/24
+addresses:
+  chthon: 192.168.10.5
+  slipgate: 192.168.10.1   # the router's address on necropolis (gateway and DNS)
+  ranger: 192.168.40.142
+
+lan:
+  connection: Wired connection 1
+  interface: enp2s0
+  address: "{{ addresses.chthon }}/24"
+  gateway: "{{ addresses.slipgate }}"
+  dns: "{{ addresses.slipgate }}"
+  search: internal
+
+# hythm is the owner (sudo asks for root's password: openSUSE `Defaults targetpw`);
+# claude is the automation account, key-only with passwordless sudo
+owner: hythm
+automation:
+  user: claude
+  key: ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHW3t5CIgHoblAqM6vP9vk0yeRVsrGForcx1Td56Enpn claude@qube-ops
+
+# btrfs RAID10 (data, metadata, system) over nvme1n1 + nvme2n1; every top-level subvolume
+# is mounted on its own and exported on its own (there is no /data export)
+data_uuid: 23208694-7a23-43b7-a41d-0b187f2ad9cc
+subvolumes:
+  - name: "@media"
+    fstype: auto
+    opts: subvol=@media,subvolid=256,defaults,noatime,compress=zstd
+    owner: hythm
+    mode: "0775"
+  - name: "@apps"
+    opts: subvol=@apps
+    owner: root
+    mode: "0755"
+  - name: "@backup"
+    opts: subvol=@backup
+    owner: root
+    mode: "0755"
+  - name: "@photos"
+    opts: subvol=@photos,noatime,compress=zstd
+    owner: hythm
+    mode: "0775"
+  - name: "@documents"
+    opts: subvol=@documents,noatime,compress=zstd
+    owner: hythm
+    mode: "0775"
+
+# targets inside subvolumes that the cluster writes to
+data_dirs:
+  - path: /data/@backup/postgres   # CNPG backups
+    owner: hythm
+    mode: "0755"
+  - path: /data/@backup/kopia      # VolSync kopia repository
+    owner: hythm
+    mode: "0700"
+
+exports:
+  - path: /data/@media
+    clients:
+      - "{{ networks.necropolis }}(rw,no_root_squash)"
+      - host: "{{ addresses.ranger }}(rw,root_squash)"
+        note: ranger only
+  - path: /data/@backup/postgres
+    clients:
+      - "{{ networks.necropolis }}(rw,no_root_squash)"
+  - path: /data/@backup/kopia/
+    clients:
+      - "{{ networks.necropolis }}(rw,anonuid=1000,anongid=1000,sync,no_subtree_check,all_squash)"
+  - path: /data/@photos
+    clients:
+      - "{{ networks.necropolis }}(rw,sync,no_subtree_check,root_squash)"
+  - path: /data/@documents
+    clients:
+      - "{{ networks.necropolis }}(rw,sync,no_subtree_check,root_squash)"
+
+# snapper timelines for the irreplaceable data (the root config comes with the installer)
+snapper_configs:
+  - name: photos
+    subvolume: /data/@photos
+  - name: documents
+    subvolume: /data/@documents
+snapper_settings:
+  NUMBER_LIMIT: "50"
+  TIMELINE_CREATE: "yes"
+  TIMELINE_CLEANUP: "yes"
+  TIMELINE_LIMIT_HOURLY: "24"
+  TIMELINE_LIMIT_DAILY: "14"
+  TIMELINE_LIMIT_WEEKLY: "8"
+  TIMELINE_LIMIT_MONTHLY: "12"
+  TIMELINE_LIMIT_QUARTERLY: "0"
+  TIMELINE_LIMIT_YEARLY: "2"
+
+# not packaged for openSUSE; installed from the release tarball
+# renovate: datasource=github-releases depName=prometheus-community/smartctl_exporter
+smartctl_exporter_version: v0.12.0

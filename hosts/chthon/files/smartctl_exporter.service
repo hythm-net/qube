@@ -1,0 +1,12 @@
+[Unit]
+Description=Prometheus Smartctl Exporter
+After=network.target
+
+[Service]
+Restart=always
+Type=simple
+# smartctl requires root permissions to access raw disks
+ExecStart=/usr/local/bin/smartctl_exporter --web.listen-address=:9633
+
+[Install]
+WantedBy=multi-user.target

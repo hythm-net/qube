@@ -1,0 +1,229 @@
+---
+# chthon: the NAS. Everything configured by hand after an openSUSE Leap 16 install.
+# Run: task hosts:chthon [CHECK=true]   (dry run with --check --diff)
+- name: Configure chthon
+  hosts: chthon
+  become: true
+
+  handlers:
+    - name: Reload sshd
+      ansible.builtin.systemd_service:
+        name: sshd.service
+        state: reloaded
+
+    - name: Re-export NFS shares
+      ansible.builtin.command: exportfs -ra
+      changed_when: true
+
+    - name: Restart smartctl_exporter
+      ansible.builtin.systemd_service:
+        name: smartctl_exporter.service
+        state: restarted
+        daemon_reload: true
+
+  tasks:
+    - name: Base system
+      tags: [base]
+      block:
+        - name: Hostname
+          ansible.builtin.hostname:
+            name: chthon
+            use: systemd
+
+        - name: Timezone
+          community.general.timezone:
+            name: "{{ timezone }}"
+
+        - name: Packages
+          community.general.zypper:
+            name: "{{ packages }}"
+            state: present
+
+        - name: Keep the MediaTek Wi-Fi/Bluetooth chip off (wired only)
+          ansible.builtin.copy:
+            src: blacklist-mediatek.conf
+            dest: /etc/modprobe.d/blacklist-mediatek.conf
+            owner: root
+            group: root
+            mode: "0644"
+
+    - name: Network
+      tags: [network]
+      block:
+        - name: Static address on necropolis
+          community.general.nmcli:
+            conn_name: "{{ lan.connection }}"
+            ifname: "{{ lan.interface }}"
+            type: ethernet
+            method4: manual
+            ip4: "{{ lan.address }}"
+            gw4: "{{ lan.gateway }}"
+            dns4: ["{{ lan.dns }}"]
+            dns4_search: ["{{ lan.search }}"]
+            method6: auto
+            autoconnect: true
+            state: present
+
+    - name: Users and access
+      tags: [users]
+      block:
+        - name: Owner is in wheel
+          ansible.builtin.user:
+            name: "{{ owner }}"
+            groups: wheel
+            append: true
+
+        - name: Automation account
+          ansible.builtin.user:
+            name: "{{ automation.user }}"
+            shell: /bin/bash
+
+        - name: Automation account key
+          ansible.posix.authorized_key:
+            user: "{{ automation.user }}"
+            key: "{{ automation.key }}"
+
+        - name: Automation account sudo
+          ansible.builtin.copy:
+            content: "{{ automation.user }} ALL=(ALL) NOPASSWD: ALL\n"
+            dest: /etc/sudoers.d/{{ automation.user }}
+            owner: root
+            group: root
+            mode: "0440"
+            validate: visudo -cf %s
+
+        - name: Root may log in with its password from the LAN and WireGuard only (disaster recovery)
+          ansible.builtin.copy:
+            src: 50-root-password-lan.conf
+            dest: /etc/ssh/sshd_config.d/50-root-password-lan.conf
+            owner: root
+            group: root
+            mode: "0644"
+            validate: sshd -t -f %s
+          notify: Reload sshd
+
+    - name: Storage
+      tags: [storage]
+      block:
+        - name: Mount the data subvolumes
+          ansible.posix.mount:
+            path: /data/{{ item.name }}
+            src: UUID={{ data_uuid }}
+            fstype: "{{ item.fstype | default('btrfs') }}"
+            opts: "{{ item.opts }}"
+            state: mounted
+          loop: "{{ subvolumes }}"
+          loop_control:
+            label: "{{ item.name }}"
+
+        - name: Subvolume roots
+          ansible.builtin.file:
+            path: /data/{{ item.name }}
+            state: directory
+            owner: "{{ item.owner }}"
+            group: "{{ item.owner }}"
+            mode: "{{ item.mode }}"
+          loop: "{{ subvolumes }}"
+          loop_control:
+            label: "{{ item.name }}"
+
+        - name: Directories the cluster writes to
+          ansible.builtin.file:
+            path: "{{ item.path }}"
+            state: directory
+            owner: "{{ item.owner }}"
+            group: "{{ item.owner }}"
+            mode: "{{ item.mode }}"
+          loop: "{{ data_dirs }}"
+          loop_control:
+            label: "{{ item.path }}"
+
+    - name: NFS
+      tags: [nfs]
+      block:
+        - name: Exports
+          ansible.builtin.template:
+            src: exports.j2
+            dest: /etc/exports
+            owner: root
+            group: root
+            mode: "0644"
+          notify: Re-export NFS shares
+
+    - name: Snapshots
+      tags: [snapper]
+      block:
+        - name: Snapper configs
+          ansible.builtin.command: snapper -c {{ item.name }} create-config {{ item.subvolume }}
+          args:
+            creates: /etc/snapper/configs/{{ item.name }}
+          loop: "{{ snapper_configs }}"
+          loop_control:
+            label: "{{ item.name }}"
+
+        - name: Snapper retention
+          ansible.builtin.lineinfile:
+            path: /etc/snapper/configs/{{ item.0.name }}
+            regexp: ^{{ item.1.key }}=
+            line: '{{ item.1.key }}="{{ item.1.value }}"'
+          loop: "{{ snapper_configs | product(snapper_settings | dict2items) | list }}"
+          loop_control:
+            label: "{{ item.0.name }} {{ item.1.key }}"
+
+    - name: Monitoring
+      tags: [monitoring]
+      block:
+        - name: Installed smartctl_exporter version
+          ansible.builtin.command: /usr/local/bin/smartctl_exporter --version
+          register: smartctl_exporter_installed
+          changed_when: false
+          failed_when: false
+          check_mode: false
+
+        - name: Install smartctl_exporter {{ smartctl_exporter_version }}
+          # --version prints to stderr
+          when: smartctl_exporter_version | regex_replace('^v', '') not in (smartctl_exporter_installed.stdout + smartctl_exporter_installed.stderr)
+          vars:
+            release: smartctl_exporter-{{ smartctl_exporter_version | regex_replace('^v', '') }}.linux-amd64
+            base_url: https://github.com/prometheus-community/smartctl_exporter/releases/download/{{ smartctl_exporter_version }}
+          block:
+            - name: Download the release
+              ansible.builtin.get_url:
+                url: "{{ base_url }}/{{ release }}.tar.gz"
+                checksum: sha256:{{ base_url }}/sha256sums.txt
+                dest: /tmp/{{ release }}.tar.gz
+                mode: "0644"
+
+            - name: Unpack the binary
+              ansible.builtin.unarchive:
+                src: /tmp/{{ release }}.tar.gz
+                dest: /usr/local/bin
+                remote_src: true
+                extra_opts: [--strip-components=1, "{{ release }}/smartctl_exporter"]
+              notify: Restart smartctl_exporter
+
+        - name: smartctl_exporter binary
+          ansible.builtin.file:
+            path: /usr/local/bin/smartctl_exporter
+            owner: root
+            group: root
+            mode: "0755"
+
+        - name: smartctl_exporter unit (runs as root, smartctl reads raw disks)
+          ansible.builtin.copy:
+            src: smartctl_exporter.service
+            dest: /etc/systemd/system/smartctl_exporter.service
+            owner: root
+            group: root
+            mode: "0644"
+          notify: Restart smartctl_exporter
+
+    - name: Services
+      tags: [services]
+      block:
+        - name: Enabled and running
+          ansible.builtin.systemd_service:
+            name: "{{ item }}"
+            enabled: true
+            state: started
+          loop: "{{ services + ['smartctl_exporter.service'] }}"
