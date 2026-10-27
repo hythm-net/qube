@@ -10,7 +10,9 @@ EnvironmentFile=/etc/backpack/env
 StateDirectory=backpack
 CacheDirectory=backpack
 LogsDirectory=backpack
-Environment=HOME=/var/lib/backpack KOPIA_CACHE_DIRECTORY=/var/cache/backpack KOPIA_LOG_DIR=/var/log/backpack
+# each repository gets its own cache under /var/cache/backpack (backpack.sh); a shared one
+# mixes up their format blobs
+Environment=HOME=/var/lib/backpack KOPIA_LOG_DIR=/var/log/backpack
 ExecStart=/usr/local/libexec/backpack
 Nice=10
 IOSchedulingClass=idle
