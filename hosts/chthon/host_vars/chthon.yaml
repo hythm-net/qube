@@ -59,10 +59,6 @@ subvolumes:
     opts: subvol=@media,subvolid=256,defaults,noatime,compress=zstd
     owner: hythm
     mode: "0775"
-  - name: "@apps"
-    opts: subvol=@apps
-    owner: root
-    mode: "0755"
   - name: "@backup"
     opts: subvol=@backup
     owner: root
@@ -76,11 +72,12 @@ subvolumes:
     owner: hythm
     mode: "0775"
 
+# unmounted and removed from fstab; the subvolume itself is deleted by hand
+retired_mounts:
+  - /data/@apps   # the legacy Immich's, empty since the move to @photos (2026-10-21)
+
 # targets inside subvolumes that the cluster writes to
 data_dirs:
-  - path: /data/@backup/postgres   # CNPG backups
-    owner: hythm
-    mode: "0755"
   - path: /data/@backup/kopia      # VolSync kopia repository
     owner: hythm
     mode: "0700"
@@ -91,9 +88,6 @@ exports:
       - "{{ networks.necropolis }}(rw,no_root_squash)"
       - host: "{{ addresses.ranger }}(rw,root_squash)"
         note: ranger only
-  - path: /data/@backup/postgres
-    clients:
-      - "{{ networks.necropolis }}(rw,no_root_squash)"
   - path: /data/@backup/kopia/
     clients:
       - "{{ networks.necropolis }}(rw,anonuid=1000,anongid=1000,sync,no_subtree_check,all_squash)"

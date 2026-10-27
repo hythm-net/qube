@@ -116,6 +116,12 @@
           loop_control:
             label: "{{ item.name }}"
 
+        - name: Retired mounts
+          ansible.posix.mount:
+            path: "{{ item }}"
+            state: absent
+          loop: "{{ retired_mounts }}"
+
         - name: Subvolume roots
           ansible.builtin.file:
             path: /data/{{ item.name }}
