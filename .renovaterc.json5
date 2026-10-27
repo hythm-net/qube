@@ -4,9 +4,9 @@
     "github>home-operations/renovate-presets#10.0.1",
     "github>home-operations/renovate-presets//apps/grafanaDashboards.json5#10.0.1",
     "github>home-operations/renovate-presets//apps/talosFactory.json5#10.0.1",
-    "github>hythm7/qube//.renovate/autoMerge.json5",
-    "github>hythm7/qube//.renovate/groups.json5",
-    "github>hythm7/qube//.renovate/labels.json5",
+    "github>hythm-net/qube//.renovate/autoMerge.json5",
+    "github>hythm-net/qube//.renovate/groups.json5",
+    "github>hythm-net/qube//.renovate/labels.json5",
     ":timezone(America/New_York)",
   ],
   // The Main ruleset does not require up-to-date branches, and `auto` would

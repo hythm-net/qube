@@ -2,7 +2,7 @@
 
 ## Post-cutover
 - [x] **OPNsense**: Unbound query-forward `hythm.net → 192.168.20.253`; host overrides `internal.hythm.net → 192.168.20.251`, `external.hythm.net → 192.168.20.252`; delete the `ahla.show` forward zone + `internal/external.ahla.show` overrides
-- [x] **GitHub webhook** on hythm7/qube → `https://flux-webhook.hythm.net/hook/<receiver path>`
+- [x] **GitHub webhook** on hythm-net/qube (moved with the repo) → `https://flux-webhook.hythm.net/hook/<receiver path>`
 - [ ] **Clients**: repoint Jellyfin apps / bookmarks `play.ahla.show → play.hythm.net`; Seerr Application URL → `requests.hythm.net`; Wizarr server URL → `join.hythm.net`
 - [x] **Cloudflare (ahla.show)**: cluster-owned records deleted (only the apex A remains); let the domain lapse
 - [x] **Bitwarden SM**: retired keys deleted (`ahlatoken`, `ahla_*`, `ahlabot`, `chatwoot`, `lldap`, `authelia`, `wizarr_stripe_bridge`, `cloudnative_pg`, `*_4k`). Still present but unreferenced — decide later: `bitwarden`, `domains`, `eweka`, `nzbfinder`, `nzbgeek`, `home_assistant`, `paperless`, `pushover`, `slskd`, `sops`

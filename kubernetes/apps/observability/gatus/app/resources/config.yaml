@@ -36,13 +36,13 @@ storage:
 ui:
   buttons:
     - name: Github
-      link: https://github.com/hythm7
+      link: https://github.com/hythm-net
     - name: Homelab
-      link: https://github.com/hythm7/qube
+      link: https://github.com/hythm-net/qube
   default-sort-by: group
   header: Status
-  link: https://github.com/hythm7
-  logo: https://avatars.githubusercontent.com/hythm7
+  link: https://github.com/hythm-net
+  logo: https://avatars.githubusercontent.com/hythm-net
   title: Status | Gatus
 
 web:
