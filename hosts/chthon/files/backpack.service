@@ -6,6 +6,11 @@ After=network-online.target nfs-server.service
 [Service]
 Type=oneshot
 EnvironmentFile=/etc/backpack/env
+# kopia needs a home for its config, cache and logs; systemd creates these
+StateDirectory=backpack
+CacheDirectory=backpack
+LogsDirectory=backpack
+Environment=HOME=/var/lib/backpack KOPIA_CACHE_DIRECTORY=/var/cache/backpack KOPIA_LOG_DIR=/var/log/backpack
 ExecStart=/usr/local/libexec/backpack
 Nice=10
 IOSchedulingClass=idle
