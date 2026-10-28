@@ -80,8 +80,9 @@ step you're on.
 - Bitwarden **Password Manager** on the phone with `slipgate-root`, `teleporter-admin`,
   `quad-admin`, `chthon-root` and the BWS token copied in (the phone app works offline;
   Secrets Manager does not)
-- on ranger *and* a USB stick: `config-before.xml` (router today), `config-after.xml` (router
-  new), the switch export `switch.cfg`, the old `talosconfig.kube`
+- in `~/rework/` on ranger *and* on a USB stick: `config-before.xml` (router today),
+  `config-after.xml` (router new), the switch export `switch.cfg`, the old `talosconfig.kube`.
+  The router files hold its secrets: never in git
 - the Talos ISO for the new schematic (P9), on a USB stick or loaded into quad's
   *Virtual Media*
 
@@ -129,19 +130,23 @@ step you're on.
 - [x] **P6 · chthon accepts both networks.** Its root-password SSH fallback
   (`50-root-password-lan.conf`) matches `192.168.0.0/16,10.1.0.0/16` for the day. Apply it
   with `task hosts:chthon TAGS=users`.
-- [ ] **P7 · The rework PR** (`feat!: 10.1 addressing and the qube cluster`), CI green and
-  **not merged**: every address in the tables above, `clusterName: qube`, endpoint and
+- [x] **P7 · The rework PR** [#546](https://github.com/hythm-net/qube/pull/546), branch
+  `feat/rework-qube`, a **draft** until C1: every address in the tables above, `clusterName: qube`, endpoint and
   certSANs `qube.internal`, the region label, `TALOS_SECRET_ID` → the new bundle, chthon's
-  `host_vars`, the docs and CLAUDE.md.
-- [ ] **P8 · New Talos secrets.** `talosctl gen secrets` → a new Secrets Manager entry
-  `talos-qube` in `qube`, flattened like `talos`. **Keep `talos`** (the old bundle) until the
+  `host_vars`, the docs and CLAUDE.md, external-dns' owner id `qube`, and the self-signed CA's
+  organization `hythm.net`. Checked: vore's config renders with `talos-qube` and passes
+  `talosctl validate`; chthon's dry run changes only its address, gateway, DNS and exports.
+- [x] **P8 · New Talos secrets.** `talosctl gen secrets` → the Secrets Manager entry
+  `talos-qube` (3289ee3c…) in `qube`, flattened like `talos`. **Keep `talos`** (the old bundle) until the
   new cluster has run for a month.
-- [ ] **P9 · Talos ISO** for the new schematic (`task talos:generate-iso`), the last fallback
-  for C3: on a USB stick, or uploaded to quad's *Virtual Media* so vore can boot it remotely.
-- [ ] **P10 · The router's new config.** A script turns the latest `config.xml` from
-  `hythm-net/saves` into `config-after.xml` with the address map above, leaving RFC1918
-  lists alone and renaming `kube` → `qube` (Unbound override and alias). Review its diff
-  summary. It's generated again on the day (A5) so it includes any change since.
+- [x] **P9 · Talos ISO** `talos/talos-v1.14.5.iso` (`task talos:generate-iso VERSION=v1.14.5`;
+  the schematic doesn't change, d56b9441… like vore today). The last fallback for C3: put it
+  on a USB stick, or upload it to quad's *Virtual Media* so vore can boot it remotely.
+- [x] **P10 · The router's new config.** `hosts/slipgate/rework-config.py` turns `config.xml`
+  into `config-after.xml` with the address map above. It leaves RFC1918 lists and the
+  history stamps alone and renames the 6 `kube` values (alias, the rule using it, the
+  Unbound override, the BGP peer group). Reviewed 2026-10-28: 61 addresses, 6 names. It's
+  generated again on the day (A5) so it includes any change since.
 - [ ] **P11 · Pick the window.** A daytime weekend slot of about 6 hours, away from the
   nightly jobs (Paperless export 23:30, Immich dump 02:00, backpack 03:30). Tell the house:
   internet off for up to an hour, Wi-Fi may need a reconnect afterwards, apps down until
@@ -168,7 +173,9 @@ step you're on.
 4. **Off-site:** `sudo systemctl start backpack.service` on chthon; wait for it to finish
    (`journalctl -u backpack -n 5`).
 5. **Snapshots of today's state.** Router: System → Configuration → Backups → *Download* →
-   `config-before.xml`; generate `config-after.xml` from it and review the summary again.
+   `~/rework/config-before.xml`, then
+   `hosts/slipgate/rework-config.py ~/rework/config-before.xml ~/rework/config-after.xml`
+   and read its list of changes (it refuses to write a file with any site address left).
    Switch: export its config → `switch.cfg`. Copy `talos/talosconfig` to `talosconfig.kube`.
    Copy all of it to the USB stick. Tag the repo: `git tag pre-rework && git push origin pre-rework`.
 6. **Shut the cluster down:** `talosctl -n 192.168.10.10 shutdown`. vore powers off.
@@ -203,7 +210,7 @@ step you're on.
 
    Fails → [R1](#r1-router).
 5. **chthon on the new address only.** quad → chthon (fallback console). Uncomment the
-   `/etc/hosts` block on ranger, check out the rework branch, then:
+   `/etc/hosts` block on ranger, `git switch feat/rework-qube`, then:
 
    ```sh
    ssh -i ~/.ssh/qube-ops -o IdentitiesOnly=yes claude@10.1.10.5 true   # reachable through the new router
@@ -271,6 +278,11 @@ step you're on.
 4. **Logins:** Pocket ID, Immich, Jellyfin (on a TV too), Paperless, Open WebUI, lyl.
 5. **Healthchecks.io:** un-pause the three checks; they turn green within 10 minutes. Gatus is
    all green.
+6. **Cloudflare records.** The new external-dns owns records as `qube` and skips the 13 that
+   `kube` left (they still work, they just can't be updated). Delete them so it recreates its
+   own: `bootstrap/cloudflare-drop-owner.py kube` lists them, `--delete` removes them (you
+   run this one: DNS deletes are blocked for Claude). Within a minute `dig +short
+   photos.hythm.net @1.1.1.1` answers again.
 
 ### E · Finish (about 45 min; can wait a day)
 
