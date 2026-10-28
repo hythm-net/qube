@@ -1,26 +1,47 @@
 ---
 version: "3"
 
+vars:
+  # the cluster's own versions (tuppr's upgrade plans, which Renovate keeps current), so the
+  # clients never run ahead of or behind what they talk to
+  TALOS_VERSION:
+    sh: yq '.spec.talos.version' {{.ROOT_DIR}}/kubernetes/apps/system-upgrade/tuppr/upgrades/talos.yaml
+  KUBERNETES_VERSION:
+    sh: yq '.spec.kubernetes.version' {{.ROOT_DIR}}/kubernetes/apps/system-upgrade/tuppr/upgrades/kubernetes.yaml
+
 tasks:
 
   upgrade-kubectl:
-    desc: Upgrade kubectl
+    desc: Install kubectl at the cluster's Kubernetes version (checksum-verified)
     cmds:
-      - curl -LO "https://dl.k8s.io/release/{{ .VERSION }}/bin/linux/amd64/kubectl"
-      - sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
-      - rm kubectl
-    vars:
-      VERSION:
-        sh: curl -L -s https://dl.k8s.io/release/stable.txt
+      - |-
+        TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
+        BASE=https://dl.k8s.io/release/{{.KUBERNETES_VERSION}}/bin/linux/amd64
+        curl -fsSL -o "$TMP/kubectl" "$BASE/kubectl"
+        echo "$(curl -fsSL "$BASE/kubectl.sha256")  $TMP/kubectl" | sha256sum --check --quiet
+        sudo install -o root -g root -m 0755 "$TMP/kubectl" /usr/local/bin/kubectl
+      - kubectl version --client
+    status:
+      - kubectl version --client | grep -q 'Client Version: {{.KUBERNETES_VERSION}}$'
     preconditions:
-      - sudo rm /usr/local/bin/kubectl
+      - which curl sha256sum yq
 
-  upgrade-tolosctl:
-    desc: Upgrade talosctl
+  upgrade-talosctl:
+    desc: Install talosctl at the cluster's Talos version (checksum-verified)
+    aliases: [upgrade-tolosctl]
     cmds:
-      -  curl -sL https://talos.dev/install | sh
+      - |-
+        TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
+        BASE=https://github.com/siderolabs/talos/releases/download/{{.TALOS_VERSION}}
+        curl -fsSL -o "$TMP/talosctl-linux-amd64" "$BASE/talosctl-linux-amd64"
+        curl -fsSL -o "$TMP/sha256sum.txt" "$BASE/sha256sum.txt"
+        (cd "$TMP" && grep ' talosctl-linux-amd64$' sha256sum.txt | sha256sum --check --quiet)
+        sudo install -o root -g root -m 0755 "$TMP/talosctl-linux-amd64" /usr/local/bin/talosctl
+      - talosctl version --client --short
+    status:
+      - talosctl version --client --short | grep -q 'Talos {{.TALOS_VERSION}}$'
     preconditions:
-      - sudo rm /usr/local/bin/talosctl
+      - which curl sha256sum yq
 
   krew:
     desc: Set up Krew tools
