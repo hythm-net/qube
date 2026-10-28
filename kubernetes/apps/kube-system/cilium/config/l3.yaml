@@ -40,6 +40,6 @@ spec:
       peers:
         - name: slipgate
           peerASN: 64513
-          peerAddress: 192.168.0.1
+          peerAddress: 10.1.1.1
           peerConfigRef:
             name: l3-bgp-peer-config

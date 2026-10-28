@@ -1,7 +1,7 @@
 # teleporter
 
 The switch (moves traffic *within* a level, see [docs/lore.md](../../docs/lore.md)): an
-SL520S-5T1XS on `complex`, 192.168.0.254. Login: Bitwarden `rune`/`teleporter-admin`.
+SL520S-5T1XS on `complex`, 10.1.1.254. Login: Bitwarden `rune`/`teleporter-admin`.
 
 ## Port map
 
@@ -48,4 +48,4 @@ The export also holds what SNMP can't show: PoE (`ge1/1` powers `scrag` at `high
 
 To rebuild it by hand instead, the table above is the whole configuration that matters:
 the VLANs 1/10/20/30/40/50/60, each port's untagged VLAN and tagged set, plus the
-management address 192.168.0.254/24 and SNMP v2c read-only.
+management address 10.1.1.254/24 and SNMP v2c read-only.

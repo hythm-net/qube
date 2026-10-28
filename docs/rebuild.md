@@ -59,7 +59,7 @@ carries tagged.
 
 ## 4. quad: the KVM
 
-It gets 192.168.0.252 from its DHCP reservation. Login: `quad-admin`. On 2026-10-27 its
+It gets 10.1.1.252 from its DHCP reservation. Login: `quad-admin`. On 2026-10-27 its
 keyboard stayed dead while chthon hung early in boot, and worked after a power cycle.
 
 ## 5. chthon: the NAS

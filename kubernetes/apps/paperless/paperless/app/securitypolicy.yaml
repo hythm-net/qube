@@ -2,7 +2,7 @@
 # yaml-language-server: $schema=https://k8s-schemas.home-operations.com/gateway.envoyproxy.io/securitypolicy_v1alpha1.json
 # documents.hythm.net sits on envoy-direct so share links work from anywhere, but only the
 # /share/ route is for everyone. The app itself answers private addresses only: the LAN and
-# WireGuard (192.168.80.0/24). Everyone else gets a 403 and never sees the login page.
+# WireGuard (10.1.80.0/24). Everyone else gets a 403 and never sees the login page.
 # A policy on the route replaces the gateway's CrowdSec ext-auth for it, which these clients
 # do not need.
 apiVersion: gateway.envoyproxy.io/v1alpha1

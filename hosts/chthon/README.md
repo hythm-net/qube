@@ -1,7 +1,7 @@
 # chthon
 
 The NAS (the boss of Episode 1, see [docs/lore.md](../../docs/lore.md)): a Beelink ME Pro
-(Intel N150) on `necropolis`, 192.168.10.5, running openSUSE Leap 16. Its data lives on a
+(Intel N150) on `necropolis`, 10.1.10.5, running openSUSE Leap 16. Its data lives on a
 btrfs RAID10 over two NVMe drives; every top-level subvolume is mounted and exported on its
 own to the cluster.
 
@@ -58,7 +58,7 @@ The playbook starts from a fresh openSUSE Leap 16 install. Before it can run:
 1. Install Leap 16 on `nvme0n1` (the OS disk only; leave `nvme1n1`/`nvme2n1` alone). Set the
    hostname `chthon`, create the user `hythm`, and set the root password from Bitwarden
    `rune`/`chthon-root`.
-2. Give it 192.168.10.5 (or let the playbook's `network` tag do it from a temporary DHCP
+2. Give it 10.1.10.5 (or let the playbook's `network` tag do it from a temporary DHCP
    address), and allow SSH.
 3. Create the `claude` account with the key from `host_vars` (or run the first pass as
    `hythm`: `task hosts:chthon -- -u hythm -k -K`).

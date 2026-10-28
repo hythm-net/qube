@@ -26,11 +26,11 @@ services:
 # which matches clients by reverse DNS at mount time); they are named once here, matching
 # docs/lore.md, and referenced by name below.
 networks:
-  necropolis: 192.168.10.0/24
+  necropolis: 10.1.10.0/24
 addresses:
-  chthon: 192.168.10.5
-  slipgate: 192.168.10.1   # the router's address on necropolis (gateway and DNS)
-  ranger: 192.168.40.142
+  chthon: 10.1.10.5
+  slipgate: 10.1.10.1   # the router's address on necropolis (gateway and DNS)
+  ranger: 10.1.40.142
 
 lan:
   connection: Wired connection 1

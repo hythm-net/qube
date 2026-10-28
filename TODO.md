@@ -14,7 +14,7 @@
 - [ ] **Upstream pass**: review the last ~3 months of buroa/home-ops and onedr0p/home-ops (workflows, presets, apps); check the DRA driver upstream for a fix to ResourceSlices vanishing after a plugin restart
 
 ## Watch-list (no action now)
-- `home-selfsigned-ca` subject organization still says `ahla.show` — cosmetic; changing it re-issues the CA and every chained cert (incl. Bitwarden SDK TLS)
+- ~~`home-selfsigned-ca` subject organization still says `ahla.show`~~ → `hythm.net` with the rework (the rebuilt cluster issues a fresh CA anyway)
 - `talos/talosconfig` admin cert now valid to 2031-09-29 (re-minted 2026-09-29 after the 1-year default expired; see `talosctl config info`)
 - kopiur (buroa's volsync replacement) — blocked on CSI snapshot support; re-evaluate if storage ever moves off openebs-hostpath
 - spegel — only worth it if a second node is added

@@ -16,9 +16,6 @@ spec:
             apiTokenSecretRef:
               name: cloudflare-issuer-secret
               key: CLOUDFLARE_API_TOKEN
-        #selector:
-        #  dnsZones:
-        #    - ahla.show 
 ---
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
@@ -36,7 +33,7 @@ spec:
   commonName: home-selfsigned-ca
   subject:
     organizations:
-      - ahla.show 
+      - hythm.net
   secretName: root-secret
   privateKey:
     algorithm: ECDSA

@@ -17,13 +17,13 @@ spec:
         - name: slipgate
           module:
             - if_mib
-          target: 192.168.0.1
+          target: 10.1.1.1
           auth:
             - public_v2
         - name: teleporter
           module:
             - if_mib
-          target: 192.168.0.254
+          target: 10.1.1.254
           auth:
             - public_v2
       path: /snmp

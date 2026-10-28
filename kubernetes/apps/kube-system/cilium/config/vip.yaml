@@ -5,7 +5,7 @@ metadata:
   name: kube-vip
   annotations:
     external-dns.kubernetes.io/hostname: kube.hythm.net
-    lbipam.cilium.io/ips: 192.168.20.254
+    lbipam.cilium.io/ips: 10.1.20.254
 spec:
   type: LoadBalancer
   externalTrafficPolicy: Local

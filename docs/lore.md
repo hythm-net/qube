@@ -31,31 +31,31 @@ VLANs are E1 maps. Tags don't follow map order; that is history, not a rule.
 
 | VLAN | Tag | Subnet | Quake map | Carries |
 |---|---|---|---|---|
-| `complex` | untagged | 192.168.0.0/24 | E1M1 The Slipgate Complex | network gear: slipgate, teleporter, scrag, quad |
-| `necropolis` | 10 | 192.168.10.0/24 | E1M3 The Necropolis | servers: vore, chthon |
-| `gloom` | 20 | 192.168.20.0/24 | E1M5 Gloom Keep | services: every address something is served from (today the Kubernetes API VIP and the Cilium LoadBalancer pool `gloom`) |
-| `house` | 30 | 192.168.30.0/24 | E1M7 The House of Chthon | IoT: DNS and internet only |
-| `castle` | 40 | 192.168.40.0/24 | E1M2 Castle of the Damned | trusted clients (ranger) |
-| `grotto` | 50 | 192.168.50.0/24 | E1M4 The Grisly Grotto | guests: DNS and internet only |
-| `ziggurat` | 60 | 192.168.60.0/24 | E1M8 Ziggurat Vertigo (the secret level) | VPN egress: policy-routed through `arch`, with a kill switch |
-| `base` | WireGuard wg0 | 192.168.80.0/24 | DM3 The Abandoned Base | remote access (peers `ranger`, `axe`) |
+| `complex` | untagged | 10.1.1.0/24 | E1M1 The Slipgate Complex | network gear: slipgate, teleporter, scrag, quad |
+| `necropolis` | 10 | 10.1.10.0/24 | E1M3 The Necropolis | servers: vore, chthon |
+| `gloom` | 20 | 10.1.20.0/24 | E1M5 Gloom Keep | services: every address something is served from (today the Kubernetes API VIP and the Cilium LoadBalancer pool `gloom`) |
+| `house` | 30 | 10.1.30.0/24 | E1M7 The House of Chthon | IoT: DNS and internet only |
+| `castle` | 40 | 10.1.40.0/24 | E1M2 Castle of the Damned | trusted clients (ranger) |
+| `grotto` | 50 | 10.1.50.0/24 | E1M4 The Grisly Grotto | guests: DNS and internet only |
+| `ziggurat` | 60 | 10.1.60.0/24 | E1M8 Ziggurat Vertigo (the secret level) | VPN egress: policy-routed through `arch`, with a kill switch |
+| `base` | WireGuard wg0 | 10.1.80.0/24 | DM3 The Abandoned Base | remote access (peers `ranger`, `axe`) |
 | *`door`* | — | — | E1M6 The Door to Chthon | reserved (e.g. a storage VLAN) |
 
 ### Hosts and gear
 
 | Name | What | Address |
 |---|---|---|
-| `slipgate` | OPNsense router/firewall; WireGuard endpoint `slipgate.hythm.net` | 192.168.0.1 |
-| `teleporter` | switch (SL520S-5T1XS) | 192.168.0.254 |
-| `scrag` | UniFi U7 Pro access point | 192.168.0.199 |
-| `quad` | GL.iNet KVM-over-IP | 192.168.0.252 |
-| `chthon` | NAS (openSUSE, btrfs RAID10, NFS) | 192.168.10.5 |
-| `vore` | the Kubernetes node (Talos) | 192.168.10.10 |
-| `kube` | Kubernetes API VIP | 192.168.20.254 |
-| `ranger` | the owner's workstation | 192.168.40.142 / 192.168.80.42 |
+| `slipgate` | OPNsense router/firewall; WireGuard endpoint `slipgate.hythm.net` | 10.1.1.1 |
+| `teleporter` | switch (SL520S-5T1XS) | 10.1.1.254 |
+| `scrag` | UniFi U7 Pro access point | 10.1.1.199 |
+| `quad` | GL.iNet KVM-over-IP | 10.1.1.252 |
+| `chthon` | NAS (openSUSE, btrfs RAID10, NFS) | 10.1.10.5 |
+| `vore` | the Kubernetes node (Talos) | 10.1.10.10 |
+| `qube` | Kubernetes API VIP (`qube.internal`) | 10.1.20.254 |
+| `ranger` | the owner's workstation | 10.1.40.142 / 10.1.80.42 |
 | `arch` → `nord` | WireGuard wg1 (local end) to NordVPN (remote end) | 10.5.0.2 |
 
-`shambler` (192.168.10.7) is retired and reserved for the next node.
+`shambler` (10.1.10.7) is retired and reserved for the next node.
 
 ## Rules
 
@@ -72,8 +72,9 @@ VLANs are E1 maps. Tags don't follow map order; that is history, not a rule.
 5. **Sites get a DNS zone** once a second one exists: `<name>.<episode>.internal`, with E1 =
    `doomed`, E2 = `magic`, E3 = `nether`, E4 = `elder`. Each site searches its own zone
    first, so `ssh teleporter` stays local.
-6. **Subnets never overlap between sites.** New episodes use `10.<episode>.<vlan>.0/24`. E1
-   keeps `192.168.x` as the one exception.
+6. **Subnets never overlap between sites.** Every episode uses `10.<episode>.<vlan>.0/24`
+   (E1 = `10.1.x`; the untagged network counts as VLAN 1, so `complex` is `10.1.1.0/24`).
+   `10.0.x` stays free for the `start` hub.
 7. **Firewall aliases:** lowercase = one named thing (`vore`, `chthon`); CamelCase = a group or
    role (`KubeNodes`, `KubeDirect`, `PrivateNetworks`).
 8. **The zone stays `.internal`.** It is reserved by ICANN for private use and is baked into
@@ -95,7 +96,7 @@ VLANs are E1 maps. Tags don't follow map order; that is history, not a rule.
 
 ## Exceptions
 
-- The Talos cluster is named `kube`, the repo `qube`. Renaming a running cluster means
-  re-keying it.
 - `scrag` is gear with a monster name: it flies, so flying monsters = wireless.
-- E1's VLAN tags and `192.168.x` addressing predate these rules.
+- E1's VLAN tags don't follow map order; they predate these rules.
+- Cloudflare still says `kube`: the tunnel's name and external-dns' record owner id
+  (`--txt-owner-id=kube`), which can't change without re-adopting every record.
