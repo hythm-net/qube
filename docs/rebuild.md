@@ -12,11 +12,30 @@ chthon's storage). Names are explained in [lore.md](lore.md).
 | the NAS's OS disk (data drives fine) | [5](#5-chthon-the-nas): the array comes back by UUID |
 | the Kubernetes node | [6](#6-vore-the-cluster), then [7](#7-app-data) |
 
+## Addresses
+
+Everything here is `10.1.<vlan>.0/24` (episode 1 = New York, see [lore.md](lore.md)); the router
+is `.1` on every network, and the untagged `complex` counts as VLAN 1.
+
+| Network | VLAN | Subnet | Holds |
+|---|---|---|---|
+| `complex` | untagged | 10.1.1.0/24 | `slipgate` .1, `scrag` .199, `quad` .252, `teleporter` .254 |
+| `necropolis` | 10 | 10.1.10.0/24 | `chthon` .5 (static), `vore` .10 (DHCP reservation) |
+| `gloom` | 20 | 10.1.20.0/24 | envoy-direct .250, envoy-internal .251, envoy-external .252, k8s-gateway .253, `qube.internal` (API VIP) .254 |
+| `house` | 30 | 10.1.30.0/24 | IoT |
+| `castle` | 40 | 10.1.40.0/24 | `ranger` .142 |
+| `grotto` | 50 | 10.1.50.0/24 | guests |
+| `ziggurat` | 60 | 10.1.60.0/24 | VPN egress (qbittorrent .10) |
+| `base` | WireGuard wg0 | 10.1.80.0/24 | router .1, `axe` .2, `ranger` .42 |
+
+DHCP hands out .100–.199 on each network (`necropolis` .10–.99); the reservations are in the
+router's config.
+
 ## 0. What you need first
 
 - **Bitwarden.** Your master password opens the personal vault, which holds the Secrets
   Manager machine-account token. That token opens the two projects everything else needs:
-  - `qube`: the cluster (Talos bundle `talos`, the `novyxz` bot, every app's keys)
+  - `qube`: the cluster (Talos bundle `talos-qube`, the `novyxz` bot, every app's keys)
   - `rune`: the master keys for everything outside it (`slipgate-root`, `chthon-root`, `teleporter-admin`,
     `quad-admin`, the OPNsense API key `opnsense`, `saves-deploy-key`, `opnsense-heartbeat`)
 - **GitHub**, account `hythm7`, which owns the org `hythm-net`:
@@ -28,7 +47,7 @@ chthon's storage). Names are explained in [lore.md](lore.md).
 ## 1. slipgate: the router
 
 1. Install the current OPNsense. At the console, assign `igc0` as WAN and `igc1` as LAN.
-2. Open the web UI on the LAN (default 192.168.1.1). Go to **System → Configuration →
+2. Open the web UI on the LAN (factory default 192.168.1.1). Go to **System → Configuration →
    Backups → Restore** and upload `config.xml` from the latest commit in `hythm-net/saves`.
    It reboots with everything:
    - the VLANs `complex` … `ziggurat`
@@ -37,6 +56,9 @@ chthon's storage). Names are explained in [lore.md](lore.md).
    - WireGuard `base` and `arch` (to `nord`, with the kill switch)
    - FRR (BGP with vore), DDNS for `hythm.net`, SNMP
    - Monit's Healthchecks.io heartbeat, and `os-git-backup` with its cron job
+   After that reboot the LAN is **10.1.1.1**: reconnect (or renew DHCP) and carry on at
+   https://10.1.1.1. Restoring also resets the git backup's local history; its **Force push**
+   setting (on, and restored with the config) lets it push over `saves`' `main` anyway.
 3. **System → Firmware → Plugins**: reinstall any missing plugins if OPNsense offers to.
 4. Check:
    - the internet works
@@ -49,7 +71,8 @@ chthon's storage). Names are explained in [lore.md](lore.md).
 Factory-reset it, log in (`teleporter-admin`), and import `teleporter/switch.cfg` from the
 `teleporter` branch of `saves`. Without an export, configure it from the port table in
 [hosts/teleporter](../hosts/teleporter/README.md), which holds every setting that matters.
-Then check with `hosts/teleporter/portmap.py`.
+Its management address comes back as **10.1.1.254** (gateway and DNS 10.1.1.1); the factory
+default is on the label. Then check with `hosts/teleporter/portmap.py`.
 
 ## 3. scrag: Wi-Fi
 
@@ -65,7 +88,8 @@ keyboard stayed dead while chthon hung early in boot, and worked after a power c
 ## 5. chthon: the NAS
 
 Follow [hosts/chthon](../hosts/chthon/README.md): install openSUSE Leap 16 on the OS disk
-only, then `task hosts:chthon`. **An OS reinstall doesn't touch the data array**: the mounts
+only, give it **10.1.10.5/24** (gateway and DNS 10.1.10.1) so Ansible can reach it, then
+`task hosts:chthon`. **An OS reinstall doesn't touch the data array**: the mounts
 find it by UUID and every share is back. Only on new data drives do you create the array
 (also described there) and pull the data back from `backpack` (below) before step 6.
 
@@ -91,7 +115,10 @@ Check that all four export paths are up (`exportfs -s`).
 ## 6. vore: the cluster
 
 Follow the README's [Bootstrap from scratch](../README.md#bootstrap-from-scratch) and
-[bootstrap/README.md](../bootstrap/README.md). In short:
+[bootstrap/README.md](../bootstrap/README.md). vore gets **10.1.10.10** from its DHCP
+reservation; the API is `qube.internal` (10.1.20.254, announced by Cilium over BGP once it
+runs). To put an installed vore back in maintenance mode, power-cycle it and pick **Talos
+(Reset to maintenance mode)** in its boot menu (3 seconds, watch on quad). In short:
 
 ```sh
 export BWS_ACCESS_TOKEN=…                  # from the personal vault
