@@ -98,5 +98,5 @@ VLANs are E1 maps. Tags don't follow map order; that is history, not a rule.
 
 - `scrag` is gear with a monster name: it flies, so flying monsters = wireless.
 - E1's VLAN tags don't follow map order; they predate these rules.
-- Cloudflare still says `kube`: the tunnel's name and external-dns' record owner id
-  (`--txt-owner-id=kube`), which can't change without re-adopting every record.
+- The Cloudflare tunnel is still named `kube` (a third-party object; renaming means a new
+  tunnel and repointing `external.hythm.net`).

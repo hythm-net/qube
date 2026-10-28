@@ -34,8 +34,9 @@ spec:
               - --provider=cloudflare
               - --registry=txt
               - --source=gateway-httproute
-              - --txt-owner-id=kube
-              - --txt-prefix=kube.%{record_type}-
+              # renamed with the cluster (docs/rework.md D6): records owned as kube were deleted for it to recreate
+              - --txt-owner-id=qube
+              - --txt-prefix=qube.%{record_type}-
             envFrom:
               - secretRef:
                   name: "{{ .Release.Name }}-secret"
