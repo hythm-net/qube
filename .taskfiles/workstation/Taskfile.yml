@@ -22,7 +22,7 @@ tasks:
         sudo install -o root -g root -m 0755 "$TMP/kubectl" /usr/local/bin/kubectl
       - kubectl version --client
     status:
-      - kubectl version --client | grep -q 'Client Version: {{.KUBERNETES_VERSION}}$'
+      - "kubectl version --client | grep -q 'Client Version: {{.KUBERNETES_VERSION}}$'"
     preconditions:
       - which curl sha256sum yq
 
