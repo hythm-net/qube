@@ -116,10 +116,10 @@ step you're on.
   10.1.20.254  qube.internal
   ```
 
-- [ ] **P4 · Console dry run.** Move quad's HDMI and USB to `slipgate`: its console menu must
-  show and take keystrokes in quad's web UI (http://192.168.0.252). **If slipgate shows
-  nothing, stop: the plan needs another console.** Then do the same on `vore`: find the key
-  for its boot menu and take a photo of the entries it lists. Put quad back on `chthon`.
+- [ ] **P4 · Console dry run.** ✔ slipgate (2026-10-28): its keyboard works whenever quad is
+  plugged in, but **its HDMI only comes on if quad is attached while it boots**; plugged into
+  a running router, the screen stays black. Still to do: `vore`, where a reboot shows the key
+  for its boot menu; take a photo of the entries it lists. Put quad back on `chthon`.
 - [ ] **P5 · Short DHCP leases (at least a day before).** Router → Services → Dnsmasq → DHCP
   ranges: set the lease time to 600 s on every range, so clients move to the new subnets
   within minutes instead of hours.
@@ -176,7 +176,9 @@ step you're on.
 
 1. **Lifeline on.** ranger's Wi-Fi → hotspot. Unplug the AP from ge1/1, plug ranger in,
    `sudo nmcli con up lifeline`. `ping 192.168.0.1` and `ping 192.168.0.252` answer, Claude answers.
-2. **quad → slipgate.** The console shows in quad's web UI (http://192.168.0.252).
+2. **quad → slipgate.** A black screen is normal here: slipgate only turns its HDMI on while
+   booting, and the restore in B4 reboots it with quad attached. From then on, **leave quad
+   on slipgate until checkpoint B4 passes**: it's the console for [R1](#r1-router).
 3. **chthon gets its new address next to the old one** (it can't be reached otherwise once
    the router moves):
 
@@ -188,8 +190,8 @@ step you're on.
    ```
 
 4. **The router switch.** Web UI http://192.168.0.1 → System → Configuration → Backups →
-   *Restore* → `config-after.xml` → restore. It reboots (3 to 5 min, watch it on quad). The
-   console then lists LAN `10.1.1.1`.
+   *Restore* → `config-after.xml` → restore. It reboots (3 to 5 min); quad's screen
+   comes on during this boot and ends at a `login:` prompt.
 
    ✔ **Checkpoint B4** (from ranger):
    - `ping 10.1.1.1` answers and https://10.1.1.1 loads; Interfaces → Overview shows 10.1.x everywhere
