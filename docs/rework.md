@@ -82,7 +82,8 @@ step you're on.
   Secrets Manager does not)
 - on ranger *and* a USB stick: `config-before.xml` (router today), `config-after.xml` (router
   new), the switch export `switch.cfg`, the old `talosconfig.kube`
-- a second USB stick with the Talos ISO for the new schematic (P9)
+- the Talos ISO for the new schematic (P9), on a USB stick or loaded into quad's
+  *Virtual Media*
 
 ## Prep (days before, nothing changes yet)
 
@@ -118,8 +119,10 @@ step you're on.
 
 - [ ] **P4 · Console dry run.** ✔ slipgate (2026-10-28): its keyboard works whenever quad is
   plugged in, but **its HDMI only comes on if quad is attached while it boots**; plugged into
-  a running router, the screen stays black. Still to do: `vore`, where a reboot shows the key
-  for its boot menu; take a photo of the entries it lists. Put quad back on `chthon`.
+  a running router, the screen stays black. ✔ vore (2026-10-28): Talos's normal reboot uses
+  kexec and skips the firmware; `task talos:reboot-node NODE=vore MODE=powercycle` goes
+  through it and shows vore's boot menu for 3 s, with **Talos (Reset to maintenance mode)**
+  entries and **Reboot Into Firmware Interface**. Put quad back on `chthon`.
 - [ ] **P5 · Short DHCP leases (at least a day before).** Router → Services → Dnsmasq → DHCP
   ranges: set the lease time to 600 s on every range, so clients move to the new subnets
   within minutes instead of hours.
@@ -133,8 +136,8 @@ step you're on.
 - [ ] **P8 · New Talos secrets.** `talosctl gen secrets` → a new Secrets Manager entry
   `talos-qube` in `qube`, flattened like `talos`. **Keep `talos`** (the old bundle) until the
   new cluster has run for a month.
-- [ ] **P9 · Talos ISO** for the new schematic on a USB stick (`task talos:generate-iso`), a
-  fallback for C3 only.
+- [ ] **P9 · Talos ISO** for the new schematic (`task talos:generate-iso`), the last fallback
+  for C3: on a USB stick, or uploaded to quad's *Virtual Media* so vore can boot it remotely.
 - [ ] **P10 · The router's new config.** A script turns the latest `config.xml` from
   `hythm-net/saves` into `config-after.xml` with the address map above, leaving RFC1918
   lists alone and renaming `kube` → `qube` (Unbound override and alias). Review its diff
@@ -237,8 +240,9 @@ step you're on.
 
    On quad, vore comes back in **maintenance mode** at 10.1.10.10. The `local-hostpath`
    volume isn't wiped: the old volumes, including the raw Postgres data, stay on disk as a
-   last resort. If vore doesn't reach maintenance mode, boot the USB ISO (P9) from the boot
-   menu (key from P4) and use its reset entry.
+   last resort. If the reset command fails, power-cycle vore (power button) while
+   watching quad: its boot menu shows for 3 s, so press an arrow key at once and choose
+   **Talos (Reset to maintenance mode)**. Only if that fails too, boot the ISO (P9).
 4. **Bootstrap:**
 
    ```sh
