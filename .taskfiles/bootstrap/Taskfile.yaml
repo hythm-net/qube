@@ -68,9 +68,10 @@ tasks:
         vars: {BWS_ACCESS_TOKEN: '{{.BWS_ACCESS_TOKEN}}'}
       - task: helmfile
     vars:
-      # the kubeconfig's cluster entry (named after the Talos cluster), NOT the talosconfig context
+      # the current context's cluster entry (named after the Talos cluster), NOT the talosconfig
+      # context; --minify, because an older cluster's entry can still come first in the file
       CONTEXT:
-        sh: kubectl config view --output jsonpath='{.clusters[0].name}'
+        sh: kubectl config view --minify --output jsonpath='{.clusters[0].name}'
     requires:
       vars: [BWS_ACCESS_TOKEN]
     preconditions:
