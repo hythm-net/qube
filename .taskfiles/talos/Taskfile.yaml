@@ -8,7 +8,7 @@ vars:
   RANDOM_CONTROLLER:
     sh: talosctl config info --output json | jq --raw-output '.endpoints[]' | shuf -n 1
   PROJECT_ID: 8cfc9211-d42e-45af-a73f-1e52d95c417b
-  TALOS_SECRET_ID: 5d74df36-943a-4214-be04-22e23a74e781
+  TALOS_SECRET_ID: 3289ee3c-114e-4b60-87c4-b4f1015a2cff   # talos-qube (the old cluster kube: 5d74df36-943a-4214-be04-22e23a74e781)
 
 tasks:
 
@@ -29,7 +29,7 @@ tasks:
               k8sserviceaccount: {key: .CLUSTER_SERVICEACCOUNT_KEY},
               os: {crt: .MACHINE_CA_CRT, key: .MACHINE_CA_KEY}}}' > "$BUNDLE"
       talosctl gen config --with-secrets "$BUNDLE" --output-types talosconfig --output {{.TALOS_DIR}}/talosconfig --force \
-        kube https://kube.internal:6443
+        qube https://qube.internal:6443
       talosctl config endpoint {{.NODE_NAMES}}
       talosctl config node {{.NODE_NAMES}}
       chmod 600 {{.TALOS_DIR}}/talosconfig

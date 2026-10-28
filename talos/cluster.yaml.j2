@@ -11,9 +11,9 @@ machine:
 cluster:
   ca:
     crt: {{ CLUSTER_CA_CRT }}
-  clusterName: kube
+  clusterName: qube
   controlPlane:
-    endpoint: https://kube.internal:6443
+    endpoint: https://qube.internal:6443
   token: {{ CLUSTER_TOKEN }}
 ---
 apiVersion: v1alpha1
@@ -117,9 +117,9 @@ apiVersion: v1alpha1
 kind: KubeNodeConfig
 nodeIP:
   validSubnets:
-    - 192.168.10.0/24
+    - 10.1.10.0/24
 labels:
-  topology.kubernetes.io/region: kube
+  topology.kubernetes.io/region: qube
 ---
 apiVersion: v1alpha1
 kind: KubeletConfig

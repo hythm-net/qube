@@ -13,7 +13,7 @@ cluster:
     key: {{ CLUSTER_AGGREGATORCA_KEY }}
   etcd:
     advertisedSubnets:
-      - 192.168.10.0/24
+      - 10.1.10.0/24
     ca:
       crt: {{ CLUSTER_ETCD_CA_CRT }}
       key: {{ CLUSTER_ETCD_CA_KEY }}
@@ -31,7 +31,7 @@ labels:
 apiVersion: v1alpha1
 kind: KubeAPIServerConfig
 certExtraSANs:
-  - kube.internal
+  - qube.internal
 extraArgs:
   enable-aggregator-routing: "true"
 image: registry.k8s.io/kube-apiserver:v1.37.2
