@@ -113,6 +113,7 @@ Then check:
 | app config volumes (`volsync` component) | kopia repository on chthon `@backup/kopia` | automatically on first start (`restore-once`); if an app comes up empty: `task volsync:restore NS=… APP=…` |
 | **Immich database** | nightly dump 02:00 in `@photos/backups/` | **by hand**: the CNPG cluster starts empty. Restore the newest `immich-db-backup-*.sql.gz` with Immich's database-restore procedure |
 | **Paperless database** | nightly export 23:30 in `@documents/export/` | **by hand**: the CNPG cluster starts empty. Run `document_importer` on the export |
+| **Pocket ID clients and groups** | its volume (VolSync) | with the volume; if any are missing: `kubernetes/apps/pocket-id/pocket-id/bootstrap.py` recreates them with the same ids and secrets (Bitwarden). Passkeys can't be restored that way: `bootstrap.py --login-link hythm` gives a one-hour link to register one |
 
 ## 8. Done when
 
