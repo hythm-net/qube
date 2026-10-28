@@ -87,10 +87,10 @@ step you're on.
 
 ## Prep (days before, nothing changes yet)
 
-- [ ] **P1 · Passwords offline.** Copy `slipgate-root`, `teleporter-admin`, `quad-admin`,
+- [x] **P1 · Passwords offline.** Copy `slipgate-root`, `teleporter-admin`, `quad-admin`,
   `chthon-root` (Secrets Manager → `rune`) and the BWS token into Password Manager →
-  `homelab`. Open them once in the phone app in flight mode.
-- [ ] **P2 · This page on the phone.** Save it as a file (GitHub → ⋯ → Download, or print to
+  `homelab`. Open them once in the phone app in flight mode. (2026-10-28: the owner knows them by heart.)
+- [x] **P2 · This page on the phone.** Save it as a file (GitHub → ⋯ → Download, or print to
   PDF) and open it in flight mode.
 - [ ] **P3 · Lifeline dry run.** Phone hotspot on; ranger's Wi-Fi joins it. Note the hotspot's
   subnet (`ip -4 addr`); it must not be `10.1.x` or `192.168.0.x`. Then create the wired
@@ -117,7 +117,7 @@ step you're on.
   10.1.20.254  qube.internal
   ```
 
-- [ ] **P4 · Console dry run.** ✔ slipgate (2026-10-28): its keyboard works whenever quad is
+- [x] **P4 · Console dry run.** ✔ slipgate (2026-10-28): its keyboard works whenever quad is
   plugged in, but **its HDMI only comes on if quad is attached while it boots**; plugged into
   a running router, the screen stays black. ✔ vore (2026-10-28): Talos's normal reboot uses
   kexec and skips the firmware; `task talos:reboot-node NODE=vore MODE=powercycle` goes
@@ -126,7 +126,7 @@ step you're on.
 - [ ] **P5 · Short DHCP leases (at least a day before).** Router → Services → Dnsmasq → DHCP
   ranges: set the lease time to 600 s on every range, so clients move to the new subnets
   within minutes instead of hours.
-- [ ] **P6 · chthon accepts both networks.** Its root-password SSH fallback
+- [x] **P6 · chthon accepts both networks.** Its root-password SSH fallback
   (`50-root-password-lan.conf`) matches `192.168.0.0/16,10.1.0.0/16` for the day. Apply it
   with `task hosts:chthon TAGS=users`.
 - [ ] **P7 · The rework PR** (`feat!: 10.1 addressing and the qube cluster`), CI green and
