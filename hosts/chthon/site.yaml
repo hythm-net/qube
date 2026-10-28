@@ -19,6 +19,12 @@
       ansible.builtin.systemd_service:
         daemon_reload: true
 
+    - name: Reapply the network
+      # nmcli only saves the profile; this makes the live interface match it (address,
+      # gateway, DNS). An SSH session on an address that stays survives it.
+      ansible.builtin.command: nmcli device reapply {{ lan.interface }}
+      changed_when: true
+
     - name: Restart smartctl_exporter
       ansible.builtin.systemd_service:
         name: smartctl_exporter.service
@@ -67,6 +73,7 @@
             method6: auto
             autoconnect: true
             state: present
+          notify: Reapply the network
 
     - name: Users and access
       tags: [users]
