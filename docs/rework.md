@@ -10,6 +10,26 @@ Downtime is fine. Losing *access* is the risk: every step here can cut the netwo
 this page has to work **without the internet and without Claude**. Keep a copy on the
 phone (P2) and read [the safety net](#the-safety-net) before starting.
 
+**Done 2026-10-28**, in one evening (17:00–19:00 for phases A to C). Kept as the record, and
+as a template for the next site. What the day added to the plan:
+
+- **`complex` can't open connections to the servers** (only ping). The lifeline needed a
+  temporary pass rule from `192.168.0.50` to `necropolis` port 22, added through the API before
+  B3 and carried into the new config by the converter (`10.1.1.50`); deleted in E.
+- **B3 needs chthon's gateway too.** A second address alone can't answer anything outside its
+  own network; the gateway was switched to `10.1.10.1` on quad's console after B4.
+- **Ansible saved chthon's network profile without applying it**; the playbook now reapplies it.
+- **Talos `shutdown` takes about 3 minutes** (it cordons and drains first).
+- **`bootstrap:apps` used the old cluster's kubeconfig entry** (the first in the file) for its
+  temporary server override; it now takes the current context's (`--minify`).
+- **Paperless's import runs through the image's `document_importer` wrapper** (as the
+  paperless user): as root, NFS's root squash refuses the media folder.
+- **The router's git backup broke with the restore** (its local repository starts over, so the
+  history no longer matches `saves`): force push enabled; the old history is on branch
+  `before-rework`.
+- **External-dns' records**: `bootstrap/cloudflare-drop-owner.py kube --delete`, recreated within
+  a minute as `qube`.
+
 ## What changes
 
 | Network | VLAN | Now | New | Router |
