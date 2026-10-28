@@ -37,7 +37,7 @@ spec:
               IMMICH_IGNORE_MOUNT_CHECK_ERRORS: "true"
               # the admin exists: no admin sign-up and no restore-from-backup endpoint on the internet.
               # Set it back to true to restore a dump through maintenance mode.
-              IMMICH_ALLOW_SETUP: "true"   # TEMPORARY: database restore after the rework (docs/rework.md D2); revert right after
+              IMMICH_ALLOW_SETUP: "false"
               # plain lines for CrowdSec's failed-login parser (and for kubectl logs)
               NO_COLOR: "true"
             probes:
