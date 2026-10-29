@@ -29,8 +29,10 @@ PLUGIN, GUID, VERSION = "SSO Authentication", "505ce9d1-d916-42fa-86ca-673ef241d
 DEFAULT_AUTH = "Jellyfin.Server.Implementations.Users.DefaultAuthenticationProvider"
 BUTTON = (f'<form action="{JELLYFIN}/sso/OID/start/{PROVIDER}">'
           '<button class="raised block emby-button button-submit">Sign in with Pocket ID</button></form>')
-BUTTON_CSS = ("a.raised.emby-button { padding: 0.9em 1em; color: inherit !important; }\n"
-              ".disclaimerContainer { display: block; }")
+# the login message sits in .readOnlyContent with the Quick Connect and Forgot Password buttons:
+# fill that width like they do
+BUTTON_CSS = (".loginDisclaimer, .loginDisclaimer form { display: block; width: 100%; }\n"
+              ".loginDisclaimer form button { width: 100%; margin: 0; }")
 
 
 def bitwarden() -> dict:
