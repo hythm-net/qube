@@ -5,8 +5,37 @@ SL520S-5T1XS on `complex`, 10.1.1.254. Login: Bitwarden `rune`/`teleporter-admin
 
 ## Port map
 
+Every cable, with its speed and VLANs (`U` untagged, `T` tagged). Speeds are what the devices'
+own cards report; the switch's SNMP gets its multi-gig ports wrong. Checked 2026-10-29.
+
+```mermaid
+flowchart LR
+  quake(("quake: the internet")) -- coax --- modem[Spectrum modem]
+  modem -- "2.5G · WAN" --- igc0
+  subgraph slipgate [slipgate]
+    igc0[igc0]
+    igc1[igc1]
+  end
+  igc1 -- "2.5G · U1 T10–60" --- ge15
+  subgraph teleporter [teleporter]
+    ge15["ge1/5"]
+    ge11["ge1/1"]
+    ge12["ge1/2"]
+    ge13["ge1/3"]
+    ge14["ge1/4"]
+    xe16["xe1/6 SFP+, empty"]
+  end
+  ge11 -- "2.5G + PoE · U1 T40 50 60" --- scrag[scrag]
+  ge12 -- "5G · U10 T30 60" --- vore[vore enp193s0]
+  ge13 -- "5G · U10" --- chthon[chthon enp2s0]
+  ge14 -- "1G · U1" --- quad[quad]
+```
+
+vore's second port (enp196s0) and chthon's (enp3s0) are unused. quad's HDMI and USB go to
+vore ([rebuild](../../docs/rebuild.md#4-quad-the-kvm)).
+
 Read from the switch over SNMP on 2026-10-27 with [portmap.py](portmap.py), which matches
-learned MACs against the known devices:
+learned MACs against the known devices (unchanged on 2026-10-29):
 
 | Port | Link | Devices | Untagged | Tagged |
 |---|---|---|---|---|
