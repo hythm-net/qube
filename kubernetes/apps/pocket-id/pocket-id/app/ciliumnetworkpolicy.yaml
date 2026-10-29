@@ -31,3 +31,9 @@ spec:
         - matchLabels:
             io.kubernetes.pod.namespace: kube-system
             k8s-app: kube-dns
+    # smtp-relay's answers come back through its Service the same way (measured: Pocket ID's
+    # connection to smtp-relay:25 timed out until this rule)
+    - fromEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: networking
+            app.kubernetes.io/name: smtp-relay
