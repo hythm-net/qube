@@ -49,7 +49,10 @@
             name: "{{ packages }}"
             state: present
 
-        - name: Keep the MediaTek Wi-Fi/Bluetooth chip off (wired only)
+        # chthon is a wired-only NAS: nothing connects over Wi-Fi or Bluetooth, so the drivers stay
+        # unloaded to save power (the owner's choice, 2026-02). The card itself stays powered;
+        # turning it off in the firmware settings would save more.
+        - name: Keep the MediaTek Wi-Fi/Bluetooth drivers unloaded (wired only, saves power)
           ansible.builtin.copy:
             src: blacklist-mediatek.conf
             dest: /etc/modprobe.d/blacklist-mediatek.conf
