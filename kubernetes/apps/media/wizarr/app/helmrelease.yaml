@@ -55,11 +55,11 @@ spec:
       app:
         annotations:
           gatus.home-operations.com/endpoint: |-
-            group: join
-            name: join
-            url: https://join.hythm.net/health
+            group: wizarr
+            name: wizarr
+            url: https://wizarr.hythm.net/health
         hostnames:
-          - "join.hythm.net"
+          - "{{ .Release.Name }}.hythm.net"
         parentRefs:
           - name: envoy-external
             namespace: networking
