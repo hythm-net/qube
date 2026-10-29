@@ -31,4 +31,4 @@ talos/         machineconfig templates (minijinja) — cluster name `qube`, endp
 
 - Commits: conventional (`feat(namespace): …`, `fix(container): …`); PRs merged with rebase; `task github:pr:merge:all` merges open `novyxz` PRs.
 - `kubeconfig`/`talosconfig` live in-repo (gitignored) and are wired by `.mise.toml`.
-- Media apps keep their existing "Ahla" artwork/branding inside their own databases; that is intentional.
+- The old "Ahla" branding is being removed everywhere (decided 2026-10-28): app names, artwork, greetings. Apps use their own default names and URLs (`<app>.hythm.net`).
