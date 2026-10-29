@@ -15,6 +15,16 @@
       ansible.builtin.command: exportfs -ra
       changed_when: true
 
+    - name: Unload the Bluetooth drivers
+      ansible.builtin.command: modprobe -r btusb btmtk
+      changed_when: true
+
+    - name: Apply the Wi-Fi card's udev rule
+      ansible.builtin.shell: >-
+        udevadm control --reload &&
+        udevadm trigger --action=add --subsystem-match=pci --attr-match=vendor=0x14c3
+      changed_when: true
+
     - name: Reload systemd
       ansible.builtin.systemd_service:
         daemon_reload: true
@@ -49,9 +59,9 @@
             name: "{{ packages }}"
             state: present
 
-        # chthon is a wired-only NAS: nothing connects over Wi-Fi or Bluetooth, so the drivers stay
-        # unloaded to save power (the owner's choice, 2026-02). The card itself stays powered;
-        # turning it off in the firmware settings would save more.
+        # chthon is a wired-only NAS: nothing connects over Wi-Fi or Bluetooth, so the MediaTek
+        # card's drivers stay unloaded and the card sleeps, to save power (the owner's choice,
+        # 2026-02; the firmware settings have no switch for the card)
         - name: Keep the MediaTek Wi-Fi/Bluetooth drivers unloaded (wired only, saves power)
           ansible.builtin.copy:
             src: blacklist-mediatek.conf
@@ -59,6 +69,16 @@
             owner: root
             group: root
             mode: "0644"
+          notify: Unload the Bluetooth drivers
+
+        - name: Let the driverless Wi-Fi card sleep
+          ansible.builtin.copy:
+            src: 80-mediatek-wifi-sleep.rules
+            dest: /etc/udev/rules.d/80-mediatek-wifi-sleep.rules
+            owner: root
+            group: root
+            mode: "0644"
+          notify: Apply the Wi-Fi card's udev rule
 
     - name: Network
       tags: [network]
