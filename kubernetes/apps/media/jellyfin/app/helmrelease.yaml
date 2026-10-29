@@ -21,7 +21,7 @@ spec:
               DOTNET_SYSTEM_IO_DISABLEFILELOCKING: "true"
               JELLYFIN_FFmpeg__probesize: 50000000
               JELLYFIN_FFmpeg__analyzeduration: 50000000
-              JELLYFIN_PublishedServerUrl: https://play.hythm.net
+              JELLYFIN_PublishedServerUrl: https://jellyfin.hythm.net
               TZ: America/New_York
 
             probes:
@@ -93,12 +93,12 @@ spec:
           # video streams straight from the WAN, not through the Cloudflare tunnel; DNS-only
           external-dns.kubernetes.io/cloudflare-proxied: "false"
           gatus.home-operations.com/endpoint: |-
-            name: play
-            group: play
-            url: https://play.hythm.net/health
+            name: jellyfin
+            group: jellyfin
+            url: https://jellyfin.hythm.net/health
         hostnames:
-          - "play.hythm.net"
           - "jellyfin.hythm.net"
+          - "play.hythm.net"   # the earlier name, kept for existing apps and links
         parentRefs:
           - name: envoy-direct
             namespace: networking
