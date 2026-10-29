@@ -75,11 +75,10 @@ spec:
       app:
         annotations:
           gatus.home-operations.com/endpoint: |-
-            name: requests
-            group: requests
+            name: seerr
+            group: seerr
             path: /api/v1/status
         hostnames:
-          - "requests.hythm.net"
           - "{{ .Release.Name }}.hythm.net"
         parentRefs:
           - name: envoy-external
