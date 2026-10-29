@@ -85,6 +85,11 @@ carries tagged.
 It gets 10.1.1.252 from its DHCP reservation. Login: `quad-admin`. On 2026-10-27 its
 keyboard stayed dead while chthon hung early in boot, and worked after a power cycle.
 
+Its HDMI and USB stay on **vore**: Talos has no SSH, and its boot menu (*Reset to maintenance
+mode*) is only on the console. slipgate and chthon have SSH and web pages. When slipgate
+itself fails, quad can't be reached anyway (it's on `complex`, which slipgate routes), so
+you're at the rack: move its two cables there or plug in a screen.
+
 ## 5. chthon: the NAS
 
 Follow [hosts/chthon](../hosts/chthon/README.md): install openSUSE Leap 16 on the OS disk
