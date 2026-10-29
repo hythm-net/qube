@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """hythm.net's mail on Migadu, set up through its admin API; idempotent.
 
-- the owner's mailbox `haytham.elganiny@` (made by hand) and the address given out, `me@hythm.net`
-  (decided 2026-10-29: it needs no spelling when said aloud, only the domain does). me@ is an
-  identity on the mailbox that logs in with the mailbox's password, so mail apps sign in as me@
-  and send as me@ (with an alias they sent as the mailbox's own address)
+- the owner's mailbox `me@hythm.net`, the address given out (decided 2026-10-29: it needs no
+  spelling when said aloud, only the domain does). It's made by hand or by invitation, never
+  here: it holds the owner's mail and password. (An identity me@ on another mailbox was tried
+  first: the Gmail app showed its mail half-loaded.)
+- `haytham.elganiny@`, the full-name address, an alias into it
 - wildcard sending on the mailbox, so mail can go out as me@ and any per-service address
 - rewrite `me.*` → the mailbox: per-service addresses like `me.netflix@hythm.net` work without
   setup; random guesses (info@, sales@) still bounce
@@ -29,8 +30,8 @@ import urllib.request
 PROJECT = "b05890fc-97d9-4e5f-a734-b4ea00486b4f"  # Bitwarden rune
 DOMAIN = "hythm.net"
 API = f"https://api.migadu.com/v1/domains/{DOMAIN}"
-MAILBOX, ADDRESS, NAME = "haytham.elganiny", "me", "Haytham Elganiny"
-REWRITE = {"name": "me-per-service", "local_part_rule": f"{ADDRESS}.*", "destinations": f"{MAILBOX}@{DOMAIN}"}
+MAILBOX, FULL_NAME_ALIAS = "me", "haytham.elganiny"
+REWRITE = {"name": "me-per-service", "local_part_rule": f"{MAILBOX}.*", "destinations": f"{MAILBOX}@{DOMAIN}"}
 
 
 def login() -> str:
@@ -60,8 +61,6 @@ def show(api: Api) -> None:
               f" wildcard_sender={m.get('wildcard_sender')}")
     for a in api("/aliases")["address_aliases"]:
         print(f"alias {a['address']} → {a['destinations']}")
-    for i in api(f"/mailboxes/{MAILBOX}/identities")["identities"]:
-        print(f"identity {i['address']} on {MAILBOX}@: password_use={i['password_use']} imap={i['may_access_imap']}")
     for r in api("/rewrites")["rewrites"]:
         print(f"rewrite {r['name']}: {r['local_part_rule']} → {r['destinations']}")
 
@@ -77,13 +76,14 @@ def main() -> None:
 
     if MAILBOX not in {m["local_part"] for m in api("/mailboxes")["mailboxes"]}:
         raise SystemExit(f"no mailbox {MAILBOX}@{DOMAIN}: it holds the owner's mail, so it's made by hand, not here")
-    if ADDRESS in {a["local_part"] for a in api("/aliases")["address_aliases"]}:
-        raise SystemExit(f"{ADDRESS}@{DOMAIN} is an alias: delete it, it's an identity now (an alias can't be signed in as)")
-    identities = {i["local_part"]: i for i in api(f"/mailboxes/{MAILBOX}/identities")["identities"]}
-    if ADDRESS not in identities:
-        api(f"/mailboxes/{MAILBOX}/identities", "POST", {"name": NAME, "local_part": ADDRESS, "password_use": "mailbox"})
-    elif identities[ADDRESS]["password_use"] != "mailbox":
-        api(f"/mailboxes/{MAILBOX}/identities/{ADDRESS}", "PUT", {"password_use": "mailbox"})
+    if FULL_NAME_ALIAS in {m["local_part"] for m in api("/mailboxes")["mailboxes"]}:
+        print(f"{FULL_NAME_ALIAS}@{DOMAIN} is still a mailbox: delete it in the admin (it holds mail), then run this again")
+    else:
+        aliases = {a["local_part"]: a for a in api("/aliases")["address_aliases"]}
+        if FULL_NAME_ALIAS not in aliases:
+            api("/aliases", "POST", {"local_part": FULL_NAME_ALIAS, "destinations": f"{MAILBOX}@{DOMAIN}"})
+        elif aliases[FULL_NAME_ALIAS]["destinations"] != [f"{MAILBOX}@{DOMAIN}"]:
+            api(f"/aliases/{FULL_NAME_ALIAS}", "PUT", {"destinations": f"{MAILBOX}@{DOMAIN}"})
     if not api(f"/mailboxes/{MAILBOX}").get("wildcard_sender"):
         api(f"/mailboxes/{MAILBOX}", "PUT", {"wildcard_sender": True})
     if not api(f"/mailboxes/{MAILBOX}").get("wildcard_sender"):
