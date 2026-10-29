@@ -8,6 +8,9 @@
 - rewrite `me.*` → the mailbox: per-service addresses like `me.netflix@hythm.net` work without
   setup; random guesses (info@, sales@) still bounce
 
+Not managed here: the identity noreply@hythm.net on admin@, the cluster smtp-relay's login. Its
+password lives only in Bitwarden qube/smtp_relay (made 2026-10-29).
+
 The API login is Bitwarden `rune`/`migadu` (MIGADU_USER, MIGADU_API_KEY); nothing secret is printed.
 
     export BWS_ACCESS_TOKEN=…
