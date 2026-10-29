@@ -27,7 +27,8 @@ named after the game's places, monsters and items.
 
 ## Episode 1: Dimension of the Doomed (New York)
 
-VLANs are E1 maps. Tags don't follow map order; that is history, not a rule.
+VLANs are E1 maps, chosen for what the map is like, not its number: the name is the place,
+the tag is the role ([rule 9](#rules)).
 
 | VLAN | Tag | Subnet | Quake map | Carries |
 |---|---|---|---|---|
@@ -40,6 +41,15 @@ VLANs are E1 maps. Tags don't follow map order; that is history, not a rule.
 | `ziggurat` | 60 | 10.1.60.0/24 | E1M8 Ziggurat Vertigo (the secret level) | VPN egress: policy-routed through `arch`, with a kill switch |
 | `base` | WireGuard wg0 | 10.1.80.0/24 | DM3 The Abandoned Base | remote access (peers `ranger`, `axe`) |
 | *`door`* | — | — | E1M6 The Door to Chthon | reserved (e.g. a storage VLAN) |
+
+Why these maps (an episode has only so many, so it's the best fit, not a perfect one):
+- `complex`: the very first level, where you come in; the gear everything else hangs off.
+- `necropolis`: underground and guarded; the servers are the core and sit deepest.
+- `castle`: the owner's fort, holding their own devices.
+- `ziggurat`: the secret level; what goes through it leaves hidden, through the VPN.
+- `house`: the house's things: IoT.
+- `gloom`: murky from outside; you only find a service if you know its address or ask DNS.
+- `grotto`: the one left over, and it starts with G, like guests.
 
 ### Hosts and gear
 
@@ -79,6 +89,11 @@ VLANs are E1 maps. Tags don't follow map order; that is history, not a rule.
    role (`KubeNodes`, `KubeDirect`, `PrivateNetworks`).
 8. **The zone stays `.internal`.** It is reserved by ICANN for private use and is baked into
    Talos' certificates; `.quake` would also make home the enemy's realm.
+9. **The VLAN tag is the role, the same at every site**: untagged = network gear, 10 servers,
+   20 services, 30 IoT, 40 trusted clients, 50 guests, 60 VPN egress, 80 remote access. Each
+   episode names them after its own maps (E1's fort `castle` is 40, so E2's `citadel` would be
+   too), so `10.<episode>.40.x` is someone's own device at any site and firewall rules carry
+   over. A new role takes a free ten (70, 90).
 
 ## Name pools
 
@@ -92,11 +107,10 @@ VLANs are E1 maps. Tags don't follow map order; that is history, not a rule.
 | Owner's devices (weapons) | `axe` | `shotgun`, `nailgun`, `perforator`, `thunderbolt` |
 | Remote access (deathmatch maps) | `base` | `cistern` (e.g. family devices), `darkzone` |
 | Tunnels out (exits) | `arch` | `runegate` (e.g. an E1↔E2 site link) |
-| E2 VLANs (Realm of Black Magic) | — | `installation`, `citadel`, `crypt`, `ebon`, `wizard`, `dismal`, `underearth` (secret) |
+| E2 VLANs (Realm of Black Magic) | — | `installation`, `citadel` (the fort, like `castle`), `crypt`, `ebon`, `wizard`, `dismal`, `underearth` (secret) |
 
 ## Exceptions
 
 - `scrag` is gear with a monster name: it flies, so flying monsters = wireless.
-- E1's VLAN tags don't follow map order; they predate these rules.
 - The Cloudflare tunnel is still named `kube` (a third-party object; renaming means a new
   tunnel and repointing `external.hythm.net`).
