@@ -4,13 +4,18 @@
 - groups family / friends / admins, with the admin `hythm` in family and admins
 - one OIDC client per app, with a fixed id, its callback URLs and the groups allowed to use it
 - each client's secret is the one in Bitwarden (`qube`/`pocket-id`, *_CLIENT_SECRET), and only that one
+- email through the cluster's smtp-relay as noreply@hythm.net: admins can email a sign-in link, and
+  everyone gets a mail when they sign in from a browser Pocket ID doesn't recognize. Signing in by
+  emailed code from the login page stays off: the passkey is the only way in on your own.
 
 Passkeys can't be set up from here: `--login-link USER` prints a one-time sign-in link (1h) to
-register one. Nothing secret is printed otherwise.
+register one, and `--email-link USER` mails it to the user instead (24h). Nothing secret is printed
+otherwise.
 
     export BWS_ACCESS_TOKEN=…
     kubernetes/apps/pocket-id/pocket-id/bootstrap.py
     kubernetes/apps/pocket-id/pocket-id/bootstrap.py --login-link hythm
+    kubernetes/apps/pocket-id/pocket-id/bootstrap.py --email-link Lolla
 
 v2.19 lost every client, group and passkey on the upgrade from v2.18 (2026-10-21; found 10-28).
 """
@@ -35,6 +40,21 @@ CLIENTS = {
     "grafana": ("Grafana", "GRAFANA_CLIENT_SECRET", ["admins"], ["https://grafana.hythm.net/login/generic_oauth"]),
     "jellyfin": ("Jellyfin", "JELLYFIN_CLIENT_SECRET", ["family", "friends"], [
         "https://jellyfin.hythm.net/sso/OID/redirect/pocket-id"]),
+}
+# smtp-relay accepts mail from the cluster without a login (maddy, no TLS inside the cluster) and
+# sends it on through Migadu, where its identity noreply@hythm.net may only send as itself
+EMAIL = {
+    "smtpHost": "smtp-relay.networking.svc.cluster.local",
+    "smtpPort": "25",
+    "smtpFrom": "noreply@hythm.net",
+    "smtpUser": "",
+    "smtpPassword": "",
+    "smtpTls": "none",
+    "smtpSkipCertVerify": "false",
+    "emailOneTimeAccessAsAdminEnabled": "true",
+    "emailOneTimeAccessAsUnauthenticatedEnabled": "false",
+    "emailLoginNotificationMode": "browserRecognition",
+    "emailApiKeyExpirationEnabled": "true",
 }
 
 
@@ -70,7 +90,9 @@ def user_id(api: Api, username: str) -> str:
 
 def main() -> None:
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    p.add_argument("--login-link", metavar="USER", help="print a one-time sign-in link for USER instead")
+    links = p.add_mutually_exclusive_group()
+    links.add_argument("--login-link", metavar="USER", help="print a one-time sign-in link for USER instead")
+    links.add_argument("--email-link", metavar="USER", help="email USER a one-time sign-in link (24h) instead")
     args = p.parse_args()
     s = secrets()
     api = Api(s["STATIC_API_KEY"])
@@ -79,6 +101,15 @@ def main() -> None:
         token = api(f"/users/{user_id(api, args.login_link)}/one-time-access-token", "POST", {"ttl": "1h"})["token"]
         print(f"https://id.hythm.net/lc/{token}")
         return
+    if args.email_link:
+        api(f"/users/{user_id(api, args.email_link)}/one-time-access-email", "POST", {"ttl": "24h"})
+        print(f"emailed {args.email_link} a sign-in link (24h)")
+        return
+
+    config = {c["key"]: c["value"] for c in api("/application-configuration/all")}
+    if any(config.get(k) != v for k, v in EMAIL.items()):
+        api("/application-configuration", "PUT", {**config, **EMAIL})
+    print(f"email: {EMAIL['smtpFrom']} via {EMAIL['smtpHost']}, sign-in alerts: {EMAIL['emailLoginNotificationMode']}")
 
     groups = {g["name"]: g["id"] for g in api("/user-groups?pagination%5Blimit%5D=100")["data"]}
     for name, friendly in GROUPS.items():
