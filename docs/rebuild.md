@@ -145,6 +145,7 @@ Then check:
 | app config volumes (`volsync` component) | kopia repository on chthon `@backup/kopia` | automatically on first start (`restore-once`); if an app comes up empty: `task volsync:restore NS=… APP=…` |
 | **Immich database** | nightly dump 02:00 in `@photos/backups/` | **by hand**: the CNPG cluster starts empty. Set `IMMICH_ALLOW_SETUP: "true"` in a temporary commit, restore the newest `immich-db-backup-*.sql.gz` through Immich's maintenance-mode restore, and revert the commit straight away (the restore page is public while it's on) |
 | **Paperless database** | nightly export 23:30 in `@documents/export/` | **by hand**: the CNPG cluster starts empty. `kubectl -n paperless exec deploy/paperless -- document_importer /data/nas/export` (the image's wrapper runs it as the paperless user; as root, NFS refuses the media folder) |
+| **Mail** (`me@hythm.net`) | Migadu; nightly copy in chthon `@mail` (Maildir) and off-site | stays on Migadu. If mail is lost there: restore `@mail` (snapper, or `backpack` like `@photos`), then upload it with `mbsync` the other way (`Sync Push` on a copy of `/etc/backpack/mbsyncrc`, logged in as `me@`; `backup@` can't write) |
 | **Pocket ID clients and groups** | its volume (VolSync) | with the volume; if any are missing: `kubernetes/apps/pocket-id/pocket-id/bootstrap.py` recreates them with the same ids and secrets (Bitwarden). Passkeys can't be restored that way: `bootstrap.py --login-link hythm` gives a one-hour link to register one |
 
 ## 8. Done when

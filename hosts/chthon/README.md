@@ -14,7 +14,7 @@ own to the cluster.
 | `users` | `hythm` in `wheel`, the `claude` automation account (key + passwordless sudo), root's password login from the LAN and WireGuard only |
 | `storage` | the subvolume mounts (`/etc/fstab`), their owners and modes, the directories the cluster writes to |
 | `nfs` | `/etc/exports` |
-| `snapper` | timelines for `@photos` and `@documents` |
+| `snapper` | timelines for `@photos`, `@documents` and `@mail` |
 | `monitoring` | `smartctl_exporter` (pinned release; Renovate bumps it) |
 | `backpack` | the nightly off-site copy to the R2 bucket `backpack` (see below) |
 | `services` | everything that must be enabled and running |
@@ -36,12 +36,15 @@ reads its credentials from Bitwarden, so `BWS_ACCESS_TOKEN` must be exported.
 ## backpack: the off-site copy
 
 `backpack.timer` runs [files/backpack.sh](files/backpack.sh) nightly at 03:30, after
-Paperless' export (23:30) and Immich's database dump (02:00), into the R2 bucket `backpack`:
+Paperless' export (23:30) and Immich's database dump (02:00). First it pulls `me@hythm.net`
+from Migadu into `@mail` (Maildir, with `mbsync` and the read-only login `backup@hythm.net`,
+`rune`/`mail-backup`). That copy only grows: mail deleted on Migadu stays. Then it copies to the
+R2 bucket `backpack`:
 
 | Prefix | What | Encrypted with |
 |---|---|---|
 | `volsync/` | the VolSync kopia repository (`@backup/kopia`), mirrored blob for blob | VolSync's password (`qube`/`volsync_template`) |
-| `files/` | `@photos` and `@documents`, from read-only btrfs snapshots; keeps 3 latest, 7 daily, 4 weekly, 12 monthly | its own password (`rune`/`backpack`, also in the personal vault) |
+| `files/` | `@photos`, `@documents` and `@mail`, from read-only btrfs snapshots; keeps 3 latest, 7 daily, 4 weekly, 12 monthly | its own password (`rune`/`backpack`, also in the personal vault) |
 
 Each run pings the Healthchecks.io check **off-site backup** (`/start`, then success or
 `/fail`), so a missed or failed night pages. Run it by hand with `systemctl start
@@ -70,7 +73,7 @@ drives create it first:
 ```sh
 mkfs.btrfs -L data -d raid10 -m raid10 /dev/nvme1n1 /dev/nvme2n1   # raid10 over two devices
 mount /dev/nvme1n1 /mnt
-btrfs subvolume create /mnt/@media      # and @backup @photos @documents
+btrfs subvolume create /mnt/@media      # and @backup @photos @documents @mail
 umount /mnt                             # then set data_uuid in host_vars
 ```
 

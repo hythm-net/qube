@@ -10,6 +10,7 @@ packages:
   - cockpit-packages
   - cockpit-storaged
   - golang-github-prometheus-node_exporter
+  - isync   # mbsync, for the mail backup (backpack)
   - nfs-kernel-server
   - smartmontools
   - snapper
@@ -71,6 +72,11 @@ subvolumes:
     opts: subvol=@documents,noatime,compress=zstd
     owner: hythm
     mode: "0775"
+  # me@hythm.net's mail, pulled from Migadu each night by backpack; not exported
+  - name: "@mail"
+    opts: subvol=@mail,noatime,compress=zstd
+    owner: root
+    mode: "0700"
 
 # unmounted and removed from fstab; the subvolume itself is deleted by hand
 retired_mounts:
@@ -104,6 +110,8 @@ snapper_configs:
     subvolume: /data/@photos
   - name: documents
     subvolume: /data/@documents
+  - name: mail
+    subvolume: /data/@mail
 snapper_settings:
   NUMBER_LIMIT: "50"
   TIMELINE_CREATE: "yes"
@@ -120,12 +128,14 @@ snapper_settings:
 smartctl_exporter_version: v0.15.0
 
 # backpack: the nightly off-site copy to the R2 bucket `backpack` (files/backpack.sh).
-# Credentials: Bitwarden rune/backpack and qube/volsync_template, read at apply time.
+# Credentials: Bitwarden rune/backpack, rune/mail-backup and qube/volsync_template, read at
+# apply time.
 backpack:
   schedule: "*-*-* 03:30:00"   # after Paperless' export (23:30) and Immich's dump (02:00)
   sources:
     - /data/@photos
     - /data/@documents
+    - /data/@mail
   keep:
     latest: 3
     daily: 7

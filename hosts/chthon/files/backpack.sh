@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # backpack: chthon's nightly off-site copy to the R2 bucket `backpack` (docs/rebuild.md).
 #   volsync/  the VolSync kopia repository, mirrored blob for blob (already encrypted)
-#   files/    a kopia repository of @photos and @documents (read-only snapshots, own password)
+#   files/    a kopia repository of @photos, @documents and @mail (read-only snapshots, own password)
+# Before that it pulls me@hythm.net's mail from Migadu into @mail.
 # Settings and credentials come from /etc/backpack/env (EnvironmentFile of backpack.service).
 set -euo pipefail
 
@@ -22,6 +23,12 @@ trap 'cleanup; ping_hc /fail' ERR
 ping_hc /start
 mkdir -p "$STATE" "$STAGING"
 cleanup
+
+# 0. Mail: every folder of me@hythm.net into @mail, as Maildir. It only adds: mail deleted on
+#    Migadu stays here (/etc/backpack/mbsyncrc: Sync Pull, Expunge None, Remove None). It runs
+#    first so tonight's @mail snapshot below has it; a failure fails the whole run (and alerts).
+mkdir -p /data/@mail/me
+mbsync --config /etc/backpack/mbsyncrc --all --quiet
 
 # 1. App configs: mirror the VolSync repository. This client never owns it, so it never
 #    runs maintenance on it; VolSync's KopiaMaintenance does.
