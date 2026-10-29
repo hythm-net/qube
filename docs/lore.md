@@ -84,8 +84,9 @@ Why these maps (an episode has only so many, so it's the best fit, not a perfect
    that stand for gear are gear: flying ones for wireless (`scrag`), guard dogs for cameras
    (`rottweiler`).
 5. **Sites get a DNS zone** once a second one exists: `<name>.<episode>.internal`, with E1 =
-   `doomed`, E2 = `magic`, E3 = `nether`, E4 = `elder`. Each site searches its own zone
-   first, so `ssh teleporter` stays local.
+   `doomed`, E2 = `magic`, E3 = `nether`, E4 = `elder` (from the episode titles; the `start`
+   hub's would be `welcome`, from Welcome to Quake). Each site searches its own zone first, so
+   `ssh teleporter` stays local.
 6. **Subnets never overlap between sites.** Every episode uses `10.<episode>.<vlan>.0/24`
    (E1 = `10.1.x`; the untagged network counts as VLAN 1, so `complex` is `10.1.1.0/24`).
    `10.0.x` stays free for the `start` hub.
