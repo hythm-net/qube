@@ -11,6 +11,11 @@ spec:
   interval: 1h
   values:
     cleanPrometheusOperatorObjectNames: true
+    defaultRules:
+      disabled:
+        # replaced in prometheusrule.yaml with a 2h window: a batch of downloads keeps chthon's
+        # array busy for 30+ minutes without anything being wrong
+        NodeDiskIOSaturation: true
     alertmanager:
       route:
         main:
