@@ -34,7 +34,7 @@ CLIENTS = {
     "open-webui": ("Chat", "OPEN_WEBUI_CLIENT_SECRET", ["family"], ["https://chat.hythm.net/oauth/oidc/callback"]),
     "grafana": ("Grafana", "GRAFANA_CLIENT_SECRET", ["admins"], ["https://grafana.hythm.net/login/generic_oauth"]),
     "jellyfin": ("Jellyfin", "JELLYFIN_CLIENT_SECRET", ["family", "friends"], [
-        "https://play.hythm.net/sso/OID/redirect/pocket-id"]),
+        "https://play.hythm.net/sso/OID/redirect/pocket-id", "https://jellyfin.hythm.net/sso/OID/redirect/pocket-id"]),
 }
 
 
