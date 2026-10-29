@@ -162,8 +162,9 @@ step you're on.
 - [x] **P9 · Talos ISO** `talos/talos-v1.14.5.iso` (`task talos:generate-iso VERSION=v1.14.5`;
   the schematic doesn't change, d56b9441… like vore today). The last fallback for C3: put it
   on a USB stick, or upload it to quad's *Virtual Media* so vore can boot it remotely.
-- [x] **P10 · The router's new config.** `hosts/slipgate/rework-config.py` turns `config.xml`
-  into `config-after.xml` with the address map above. It leaves RFC1918 lists and the
+- [x] **P10 · The router's new config.** `hosts/slipgate/rework-config.py` (removed after the
+  rework; it's in commit 8698f17) turns `config.xml` into `config-after.xml` with the address
+  map above. It leaves RFC1918 lists and the
   history stamps alone and renames the 6 `kube` values (alias, the rule using it, the
   Unbound override, the BGP peer group). Reviewed 2026-10-28: 61 addresses, 6 names. It's
   generated again on the day (A5) so it includes any change since.
