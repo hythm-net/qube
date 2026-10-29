@@ -34,7 +34,7 @@ spec:
               - --provider=cloudflare
               - --registry=txt
               - --source=gateway-httproute
-              # renamed with the cluster (docs/rework.md D6): records owned as kube were deleted for it to recreate
+              # renamed with the cluster (2026-10-28): records owned as kube were deleted for it to recreate
               - --txt-owner-id=qube
               - --txt-prefix=qube.%{record_type}-
             envFrom:
