@@ -20,6 +20,7 @@ named after the game's places, monsters and items.
 | **Bosses** | one-of-a-kind central servers | `chthon` (the NAS) |
 | **Flying** monsters | **wireless** gear | `scrag` |
 | **Rottweilers**, the guard dogs | **cameras** (on `house`) | *(reserved: `rottweiler`)* |
+| The **Dopefish**, a secret painting (id's in-joke, hidden in game after game) | a **canary**: a decoy that alerts when anyone touches it | *(reserved: `dopefish`)* |
 | **Power-ups** | appliances | `quad` |
 | **Ranger**, the player | the owner's workstation | `ranger` |
 | The Ranger's **weapons** | the owner's other devices | `axe` (phone) |
@@ -79,7 +80,7 @@ Why these maps (an episode has only so many, so it's the best fit, not a perfect
 3. **The first of a kind gets the family's main name; more come from the same family.** No
    numbering (`teleporter2`).
 4. **Servers are unique across all episodes**: a monster is an individual. Gear roles
-   (`slipgate`, `teleporter`, …) may repeat per site, told apart by the site zone. Monsters
+   (`slipgate`, `teleporter`, `dopefish`, …) may repeat per site, told apart by the site zone. Monsters
    that stand for gear are gear: flying ones for wireless (`scrag`), guard dogs for cameras
    (`rottweiler`).
 5. **Sites get a DNS zone** once a second one exists: `<name>.<episode>.internal`, with E1 =
@@ -105,6 +106,7 @@ Why these maps (an episode has only so many, so it's the best fit, not a perfect
 | Switches (move within a level) | `teleporter` | `lift`, `train`, `push` |
 | Wireless (flying) | `scrag` | `wrath`, `overlord` (mission-pack flyers) |
 | Cameras (guard dogs) | — | `rottweiler` |
+| Canaries (secrets) | — | `dopefish` |
 | Servers (monsters) | `vore` | `shambler` (reserved), `ogre`, `fiend`, `knight`, `enforcer`, `grunt`, `zombie`, `spawn` |
 | Bosses | `chthon` | `shub` |
 | Appliances (power-ups) | `quad` | `pent`, `ring`, `biosuit` |
