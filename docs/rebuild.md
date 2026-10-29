@@ -155,5 +155,5 @@ Then check:
   kopia needs to rewrite), so someone controlling chthon could delete it. A locked second
   copy (Backblaze B2 with Object Lock, or a box at another site) would close that. `@media`
   isn't copied off-site on purpose: it can be re-downloaded.
-- The switch export in `saves` is a snapshot from 2026-10-27: re-export after changing the switch.
+- The switch export in `saves` is a snapshot from 2026-10-28: re-export after changing the switch.
 - The UniFi controller's own backup lives on `ranger`. Keep a copy of its autobackup.
