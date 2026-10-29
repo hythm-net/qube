@@ -98,6 +98,7 @@ spec:
             url: https://play.hythm.net/health
         hostnames:
           - "play.hythm.net"
+          - "jellyfin.hythm.net"
         parentRefs:
           - name: envoy-direct
             namespace: networking
