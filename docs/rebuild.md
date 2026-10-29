@@ -143,8 +143,8 @@ Then check:
 |---|---|---|
 | media, photos, documents | chthon `@media`, `@photos`, `@documents` (NFS) | by themselves once chthon exports them |
 | app config volumes (`volsync` component) | kopia repository on chthon `@backup/kopia` | automatically on first start (`restore-once`); if an app comes up empty: `task volsync:restore NS=… APP=…` |
-| **Immich database** | nightly dump 02:00 in `@photos/backups/` | **by hand**: the CNPG cluster starts empty. Restore the newest `immich-db-backup-*.sql.gz` with Immich's database-restore procedure |
-| **Paperless database** | nightly export 23:30 in `@documents/export/` | **by hand**: the CNPG cluster starts empty. Run `document_importer` on the export |
+| **Immich database** | nightly dump 02:00 in `@photos/backups/` | **by hand**: the CNPG cluster starts empty. Set `IMMICH_ALLOW_SETUP: "true"` in a temporary commit, restore the newest `immich-db-backup-*.sql.gz` through Immich's maintenance-mode restore, and revert the commit straight away (the restore page is public while it's on) |
+| **Paperless database** | nightly export 23:30 in `@documents/export/` | **by hand**: the CNPG cluster starts empty. `kubectl -n paperless exec deploy/paperless -- document_importer /data/nas/export` (the image's wrapper runs it as the paperless user; as root, NFS refuses the media folder) |
 | **Pocket ID clients and groups** | its volume (VolSync) | with the volume; if any are missing: `kubernetes/apps/pocket-id/pocket-id/bootstrap.py` recreates them with the same ids and secrets (Bitwarden). Passkeys can't be restored that way: `bootstrap.py --login-link hythm` gives a one-hour link to register one |
 
 ## 8. Done when
@@ -153,6 +153,35 @@ Then check:
 - Gatus is all green; Flux reports every Kustomization and HelmRelease ready
 - `NodeRebooted` has fired and resolved; nothing else is firing
 - `task hosts:chthon CHECK=true` reports `changed=0`
+
+## When it goes wrong
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| vore doesn't get 10.1.10.10 | DHCP reservation or switch port | the router's DHCP leases (vore's MAC 78:55:36:08:3b:c2); ge1/2 untagged 10 |
+| Bootstrap can't find the node | vore isn't in maintenance mode | watch it on quad; `talosctl -n 10.1.10.10 get disks --insecure` |
+| `talosctl`: x509 or certificate errors | an old talosconfig | `task talos:generate-talosconfig` writes `talos/talosconfig` from Bitwarden `talos-qube` |
+| `qube.internal` doesn't answer | the API address comes from Cilium over BGP, so only once Cilium runs | BGP Established on the router? `kubectl -n kube-system get svc kube-vip` |
+| BGP not Established | peer addresses | Cilium's peer is 10.1.1.1 (`l3.yaml`); the router's neighbor is 10.1.10.10 |
+| Flux can't pull from GitHub | the bot's credentials | the secrets store is Ready and the `qubetoken` Secret exists |
+| An app starts empty | VolSync didn't restore it | `task volsync:restore NS=… APP=…` |
+| Router has no internet | the WAN, not the restore | Interfaces → Overview: WAN has an address; power-cycle the modem |
+
+## Big changes
+
+For work that can cut the network (new addressing, a router swap, a second site), plan it the
+way the 2026-10-28 rework did ([its runbook](https://github.com/hythm-net/qube/blob/e453b7b/docs/rework.md)):
+
+- **A lifeline:** ranger wired into a switch port on `complex`, holding an address on both the
+  old and the new network, with internet from the phone's hotspot, so the router and switch
+  stay reachable whatever state they're in.
+- **An offline kit:** the plan on the phone, the break-glass passwords in the Password Manager
+  app (it works offline), the router and switch exports on a USB stick.
+- **Checkpoints and rollback per phase:** if a check fails and the fix isn't obvious in 15
+  minutes, roll that phase back. Name the point of no return (wiping vore) and keep
+  everything before it reversible.
+- **Allow for the firewall:** `complex` can only ping the servers, so a lifeline that needs SSH
+  to them needs a temporary rule.
 
 ## Known gaps
 

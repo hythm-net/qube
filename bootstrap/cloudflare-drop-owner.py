@@ -2,7 +2,7 @@
 """Delete the Cloudflare records an external-dns owner left behind, so a renamed owner can recreate them.
 
 external-dns (registry=txt) only touches records whose ownership TXT names its own owner id.
-After `--txt-owner-id` changes (kube -> qube with the rework, docs/rework.md D6), the old
+After `--txt-owner-id` changes (kube -> qube with the rework of 2026-10-28), the old
 records stay and the new owner skips them. This lists every record the old owner's TXTs
 name, plus those TXTs; `--delete` removes them, and external-dns recreates them within a
 minute. Records no TXT names (external.hythm.net, direct.hythm.net, mail, the apex) are
