@@ -9,7 +9,7 @@ own to the cluster.
 
 | Tag | What |
 |---|---|
-| `base` | hostname, timezone, packages, the MediaTek Wi-Fi/Bluetooth blacklist |
+| `base` | hostname, timezone, packages, the MediaTek Wi-Fi/Bluetooth blacklist (wired only, saves power) |
 | `network` | the static address on `necropolis` (NetworkManager) |
 | `users` | `hythm` in `wheel`, the `claude` automation account (key + passwordless sudo), root's password login from the LAN and WireGuard only |
 | `storage` | the subvolume mounts (`/etc/fstab`), their owners and modes, the directories the cluster writes to |
