@@ -1,0 +1,3 @@
+# The MediaTek Wi-Fi card (MT7920) has no driver (blacklist-mediatek.conf), and the PCI core keeps
+# a driverless device at full power unless told otherwise: let it, and the port it hangs off, sleep.
+ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x14c3", ATTR{device}=="0x7920", ATTR{power/control}="auto"
