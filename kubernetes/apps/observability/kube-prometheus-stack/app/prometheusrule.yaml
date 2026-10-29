@@ -85,3 +85,20 @@ spec:
               If no maintenance is running: kubectl uncordon {{ $labels.node }}
           labels:
             severity: warning
+
+    - name: disk.rules
+      rules:
+        # the chart's NodeDiskIOSaturation with `for: 2h` instead of 30m (disabled there): a big
+        # batch of downloads (SABnzbd unpacking into chthon's RAID10) holds the queue above 10
+        # for half an hour or more; a struggling disk stays saturated far longer
+        - alert: NodeDiskIOSaturation
+          expr: |-
+            rate(node_disk_io_time_weighted_seconds_total{job="node-exporter", device=~"(/dev/)?(mmcblk.p.+|nvme.+|rbd.+|sd.+|vd.+|xvd.+|dm-.+|md.+|dasd.+)"}[5m]) > 10
+          for: 2h
+          annotations:
+            summary: Disk IO queue is high.
+            description: >-
+              Disk IO queue (aqu-sq) is high on {{ $labels.device }} at {{ $labels.instance }}, has been above 10
+              for the last 2 hours, is currently at {{ printf "%.2f" $value }}. This symptom might indicate disk saturation.
+          labels:
+            severity: warning
