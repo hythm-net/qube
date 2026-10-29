@@ -1,0 +1,29 @@
+# Managed by Ansible (hosts/chthon): backpack's mail pull (files/backpack.sh, step 0).
+# The login is the Migadu identity backup@hythm.net on me@: it can read, not send
+# (Bitwarden rune/mail-backup, read at apply time).
+IMAPAccount migadu
+Host imap.migadu.com
+Port 993
+SSLType IMAPS   # isync 1.4 (Leap 16); 1.5 renames it TLSType
+User {{ mail_secret.MAIL_BACKUP_USER }}
+Pass {{ mail_secret.MAIL_BACKUP_PASSWORD }}
+
+IMAPStore migadu
+Account migadu
+
+MaildirStore chthon
+Path /data/@mail/me/
+Inbox /data/@mail/me/INBOX
+SubFolders Verbatim
+
+# a backup that only grows: new mail and flag changes come down, nothing is ever deleted here
+Channel me
+Far :migadu:
+Near :chthon:
+Patterns *
+Create Near
+Sync Pull
+Expunge None
+Remove None
+SyncState *
+CopyArrivalDate yes

@@ -265,6 +265,7 @@
           ansible.builtin.set_fact:
             backpack_secret: "{{ (lookup('ansible.builtin.pipe', 'bws secret list ' ~ bitwarden_projects.rune ~ ' -o json') | from_json | selectattr('key', 'equalto', 'backpack') | first).value | from_json }}"
             volsync_secret: "{{ (lookup('ansible.builtin.pipe', 'bws secret list ' ~ bitwarden_projects.qube ~ ' -o json') | from_json | selectattr('key', 'equalto', 'volsync_template') | first).value | from_json }}"
+            mail_secret: "{{ (lookup('ansible.builtin.pipe', 'bws secret list ' ~ bitwarden_projects.rune ~ ' -o json') | from_json | selectattr('key', 'equalto', 'mail-backup') | first).value | from_json }}"
           no_log: true
 
         - name: Installed kopia version
@@ -315,6 +316,16 @@
           ansible.builtin.template:
             src: backpack.env.j2
             dest: /etc/backpack/env
+            owner: root
+            group: root
+            mode: "0600"
+          no_log: true
+          diff: false
+
+        - name: Mail backup login (root only)
+          ansible.builtin.template:
+            src: mbsyncrc.j2
+            dest: /etc/backpack/mbsyncrc
             owner: root
             group: root
             mode: "0600"
