@@ -1,0 +1,27 @@
+---
+# yaml-language-server: $schema=https://k8s-schemas.home-operations.com/cilium.io/ciliumnetworkpolicy_v2.json
+# neony is static files for the outside world: the external gateway reaches
+# its one port, and the kubelet for its probes; nothing else does
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: neony
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: neony
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            io.kubernetes.pod.namespace: networking
+            gateway.envoyproxy.io/owning-gateway-name: envoy-external
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
+    - fromEntities:
+        - host
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP

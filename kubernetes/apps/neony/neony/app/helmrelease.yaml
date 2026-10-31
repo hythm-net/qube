@@ -1,0 +1,85 @@
+---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/main/charts/other/app-template/schemas/helmrelease-helm-v2.schema.json
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: neony
+spec:
+  chartRef:
+    kind: OCIRepository
+    name: app-template
+    namespace: flux-system
+  interval: 1h
+  values:
+    controllers:
+      neony:
+        # the game in the browser, a free preview: static files served by
+        # nginx, the image built from the game's private repo
+        # (android/web/Dockerfile), itself private
+        containers:
+          app:
+            image:
+              repository: ghcr.io/hythm-net/neony
+              tag: 0.1.0@sha256:81d473cfe8361b5a4f693afe4c72178bb03db30f9271b1dd0b83b380a5e4ce50
+            env:
+              TZ: America/New_York
+            probes:
+              liveness: &probes
+                enabled: true
+                custom: true
+                spec:
+                  httpGet:
+                    path: /healthz
+                    port: 8080
+                  initialDelaySeconds: 0
+                  periodSeconds: 10
+                  timeoutSeconds: 3
+                  failureThreshold: 3
+              readiness: *probes
+            resources:
+              requests:
+                cpu: 10m
+                memory: 32Mi
+              limits:
+                memory: 128Mi
+            securityContext:
+              allowPrivilegeEscalation: false
+              readOnlyRootFilesystem: true
+              capabilities: { drop: ["ALL"] }
+    defaultPodOptions:
+      imagePullSecrets:
+        - name: neony-pull
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+    persistence:
+      # nginx's pid file and its caches, the image's own filesystem read-only
+      tmpfs:
+        type: emptyDir
+        advancedMounts:
+          neony:
+            app:
+              - path: /tmp
+                subPath: tmp
+    route:
+      app:
+        annotations:
+          gatus.home-operations.com/endpoint: |-
+            name: neony
+            group: neony
+            url: https://neony.hythm.net/healthz
+        hostnames:
+          - neony.hythm.net
+        parentRefs:
+          - name: envoy-external
+            namespace: networking
+        rules:
+          - backendRefs:
+              - identifier: app
+                port: 8080
+    service:
+      app:
+        ports:
+          http:
+            port: 8080
