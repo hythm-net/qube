@@ -77,8 +77,8 @@ jobs:
             talosctl latest
 
       - name: Pull Image
-        # a private image (lyl's) needs the cluster's pull secret, which the nodes do not hold
-        if: ${{ !startsWith(matrix.image, 'ghcr.io/hythm7/') }}
+        # a private image (lyl's, neony's) needs the cluster's pull secret, which the nodes do not hold
+        if: ${{ !startsWith(matrix.image, 'ghcr.io/hythm7/') && !startsWith(matrix.image, 'ghcr.io/hythm-net/') }}
         env:
           IMAGE: ${{ matrix.image }}
         run: talosctl --nodes "$NODE" image pull "$IMAGE"
