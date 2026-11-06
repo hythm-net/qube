@@ -20,7 +20,7 @@ spec:
           app:
             image:
               repository: ghcr.io/hythm-net/neony
-              tag: 0.1.20@sha256:eaf12b6482c10f3a434a9adca6e61626650cebc5c3d45b683330da4c1a0edcf5
+              tag: 0.1.21@sha256:5e6bf4a89af72a2ff3de0a9acb4479e89166079e2e5e9a4eddfc10a6c981c7f6
             env:
               TZ: America/New_York
             probes:
