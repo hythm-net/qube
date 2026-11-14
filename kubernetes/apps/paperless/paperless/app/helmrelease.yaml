@@ -46,10 +46,12 @@ spec:
               USERMAP_UID: "1000"
               USERMAP_GID: "1000"
               # sign-in with Pocket ID (provider in paperless-secret); the local login stays as
-              # the way in when Pocket ID is down. New family members get an account on first sign-in.
+              # the way in when Pocket ID is down. New family members get an account on first sign-in,
+              # in the group `family` of the shared archive (../family.py makes it)
               PAPERLESS_APPS: allauth.socialaccount.providers.openid_connect
               PAPERLESS_SOCIAL_AUTO_SIGNUP: "true"
               PAPERLESS_SOCIALACCOUNT_ALLOW_SIGNUPS: "true"
+              PAPERLESS_SOCIAL_ACCOUNT_DEFAULT_GROUPS: family
               # suggestions from the local GLM (ai/llama); nothing leaves the house. Thinking off:
               # tagging wants an answer, not a monologue
               PAPERLESS_AI_ENABLED: "true"
