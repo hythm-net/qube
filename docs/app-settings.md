@@ -23,7 +23,9 @@ Restored with its config volume (VolSync).
 | Networking: known proxies | `10.244.0.0/16` | Envoy's pods: Jellyfin reads the viewer's address from `X-Forwarded-For` (the gateways are `externalTrafficPolicy: Local`). Without it every viewer looks local |
 | Networking: LAN networks | `10.1.0.0/16`, `10.244.0.0/16` | home VLANs and WireGuard, and pods calling the Service directly |
 | Playback: remote bitrate limit | 8 Mbps | the home upload is ~23 Mbps (Spectrum, 2026-11-14), shared by everyone watching from outside |
+| User `hythm`: remote bitrate limit | 20 Mbps | the owner watching from abroad on a 4K TV: with HEVC that's 4K (Jellyfin's table: HEVC 20 ≈ H.264 33 Mbps → 3840 wide). A user's limit replaces the server's; 0 means the server's 8 |
 | Transcoding: hardware acceleration | VAAPI, `/dev/dri/renderD128`; hardware decoding H.264, HEVC (10-bit too), VP9 (10-bit too), AV1; hardware encoding on (H.264 out) | the GPU through Jellyfin's DRA claim: 4K HDR → 1080p 8 Mbps at ~12× real time. Mesa 25.0.7 logs `SIVPE ERROR … si_vpe_construct_blt` on every frame; harmless, the picture is right |
+| Transcoding: allow HEVC encoding | on | ~40% less bitrate than H.264 for the same picture, and HDR can stay HDR; used only for players that report HEVC. 4K HDR → 4K HEVC 20 Mbps ran at ~8× real time |
 | Transcoding: tone mapping | off | Jellyfin tone-maps through OpenCL on AMD and the image has none for this GPU: with it on, HDR transcodes fail. Transcoded HDR looks flatter; at home it plays direct |
 
 Networking changes need a restart. Check: `/System/Endpoint` from a pod gives `IsInNetwork: true`,
