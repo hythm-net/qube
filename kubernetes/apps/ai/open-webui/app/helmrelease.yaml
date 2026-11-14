@@ -34,6 +34,9 @@ spec:
               # admin's local login stays as the way in when Pocket ID is down.
               ENABLE_SIGNUP: "false"
               DEFAULT_USER_ROLE: user
+              # a model with no entry under Admin → Models is the admin's alone, so a family member
+              # would find none: every account sees every model (there's one, and only family get in)
+              BYPASS_MODEL_ACCESS_CONTROL: "true"
               ENABLE_OAUTH_SIGNUP: "true"
               OAUTH_MERGE_ACCOUNTS_BY_EMAIL: "true"
               OAUTH_PROVIDER_NAME: Pocket ID
