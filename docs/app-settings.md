@@ -26,6 +26,7 @@ Restored with its config volume (VolSync).
 | User `hythm`: remote bitrate limit | 20 Mbps | the owner watching from abroad on a 4K TV: with HEVC that's 4K (Jellyfin's table: HEVC 20 ≈ H.264 33 Mbps → 3840 wide). A user's limit replaces the server's; 0 means the server's 8 |
 | Transcoding: hardware acceleration | VAAPI, `/dev/dri/renderD128`; hardware decoding H.264, HEVC (10-bit too), VP9 (10-bit too), AV1; hardware encoding on (H.264 out) | the GPU through Jellyfin's DRA claim: 4K HDR → 1080p 8 Mbps at ~12× real time. Mesa 25.0.7 logs `SIVPE ERROR … si_vpe_construct_blt` on every frame; harmless, the picture is right |
 | Transcoding: allow HEVC encoding | on | ~40% less bitrate than H.264 for the same picture, and HDR can stay HDR; used only for players that report HEVC. 4K HDR → 4K HEVC 20 Mbps ran at ~8× real time |
+| Transcoding: allow AV1 encoding | on | ~25–30% less bitrate than HEVC; used only for players that report AV1 (LG webOS 22+, e.g. the G5). 4K HDR → 4K AV1 20 Mbps ran at ~5× real time with a clean picture. AV1 doesn't fit in MPEG-TS: test it with a `.mkv` stream |
 | Transcoding: tone mapping | on (BT.2390) | HDR → SDR for screens without HDR. On AMD Jellyfin tone-maps through Vulkan (libplacebo), already in the official image; OpenCL is only its fallback |
 
 Networking changes, and turning hardware acceleration on or changing it, need a restart: Jellyfin looks at the GPU only at startup (without it, it doesn't know the GPU is AMD and tries OpenCL, which fails). Check: `/System/Endpoint` from a pod gives `IsInNetwork: true`,
