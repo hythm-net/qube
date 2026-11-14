@@ -6,6 +6,9 @@
   groups family/friends may sign in, admins become Jellyfin admins, usernames from Pocket ID;
   after each SSO sign-in the account goes back to Jellyfin's normal provider, so passwords keep working
 - a "Sign in with Pocket ID" button on the login page, and Quick Connect on (TV apps can't do SSO)
+- remote streams capped at 8 Mbps, transcoded on the GPU: the home upload is ~23 Mbps, shared by
+  everyone watching from outside. Jellyfin sees each viewer's own address through Envoy (a trusted
+  proxy), so home and WireGuard keep full quality (restarts Jellyfin when those settings change)
 
 Keys come from Bitwarden (qube/jellyfin JELLYFIN_API_KEY, qube/pocket-id JELLYFIN_CLIENT_SECRET);
 nothing secret is printed.
@@ -27,6 +30,10 @@ REPO = {"Name": "SSO Authentication",
         "Url": "https://raw.githubusercontent.com/9p4/jellyfin-plugin-sso/manifest-release/manifest.json", "Enabled": True}
 PLUGIN, GUID, VERSION = "SSO Authentication", "505ce9d1-d916-42fa-86ca-673ef241d7df", "4.0.0.4"
 DEFAULT_AUTH = "Jellyfin.Server.Implementations.Users.DefaultAuthenticationProvider"
+# envoy (pods) is a trusted proxy: its X-Forwarded-For carries the viewer's address (ETP Local).
+# Home VLANs and WireGuard are 10.1.0.0/16; pods talking to the Service directly are local too.
+NETWORK = {"KnownProxies": ["10.244.0.0/16"], "LocalNetworkSubnets": ["10.1.0.0/16", "10.244.0.0/16"]}
+REMOTE_BITRATE = 8_000_000  # bits/s per stream, outside the local networks
 BUTTON = (f'<form action="{JELLYFIN}/sso/OID/start/{PROVIDER}">'
           '<button class="raised block emby-button button-submit">Sign in with Pocket ID</button></form>')
 # the login message sits in .readOnlyContent with the Quick Connect and Forgot Password buttons:
@@ -117,9 +124,19 @@ def main() -> None:
     print("login page: Sign in with Pocket ID")
 
     system = api("/System/Configuration")
-    if not system.get("QuickConnectAvailable"):
-        api("/System/Configuration", "POST", {**system, "QuickConnectAvailable": True})
-    print("Quick Connect: on")
+    want = {"QuickConnectAvailable": True, "RemoteClientBitrateLimit": REMOTE_BITRATE}
+    if any(system.get(k) != v for k, v in want.items()):
+        api("/System/Configuration", "POST", {**system, **want})
+    print(f"Quick Connect: on; remote streams up to {REMOTE_BITRATE / 1e6:g} Mbps")
+
+    # read once at startup: a change needs a restart (it ends whatever is playing)
+    network = api("/System/Configuration/network")
+    if any(network.get(k) != v for k, v in NETWORK.items()):
+        api("/System/Configuration/network", "POST", {**network, **NETWORK})
+        print("network settings changed, restarting Jellyfin")
+        api("/System/Restart", "POST")
+        wait_for_jellyfin(api)
+    print(f"proxies {NETWORK['KnownProxies']}, local {NETWORK['LocalNetworkSubnets']}")
 
 
 if __name__ == "__main__":
