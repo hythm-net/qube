@@ -15,10 +15,8 @@ spec:
         containers:
           app:
             image:
-              # the official image plus Mesa's rusticl (OpenCL) for HDR tone mapping on AMD:
-              # https://github.com/hythm-net/jellyfin
-              repository: ghcr.io/hythm-net/jellyfin
-              tag: 10.11.11@sha256:1fdd6f859231e7926958ad7a6ee0c9d5e2c54a50f9cee3cbba39fe4948610fb0
+              repository: ghcr.io/jellyfin/jellyfin
+              tag: 10.11.11@sha256:45f648c382a0c8b552582fcea40e95cb17c5d475473a891cba0eb7523fb92112
             env:
               DOTNET_SYSTEM_IO_DISABLEFILELOCKING: "true"
               JELLYFIN_FFmpeg__probesize: 50000000

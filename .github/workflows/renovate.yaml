@@ -68,8 +68,7 @@ jobs:
         env:
           LOG_LEVEL: ${{ inputs.logLevel || 'debug' }}
           RENOVATE_AUTODISCOVER: true
-          # qube and the image repos it deploys from (the app reaches every hythm-net repo)
-          RENOVATE_AUTODISCOVER_FILTER: hythm-net/qube,hythm-net/jellyfin
+          RENOVATE_AUTODISCOVER_FILTER: ${{ github.repository }}
           RENOVATE_DRY_RUN: ${{ inputs.dryRun }}
           RENOVATE_INTERNAL_CHECKS_FILTER: strict
           RENOVATE_PLATFORM: github
